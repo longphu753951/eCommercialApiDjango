@@ -1,23 +1,28 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.utils.html import mark_safe
+from uuid import uuid4
 
 class User(AbstractUser):
-    avatar = models.ImageField(upload_to="users/%Y/%m")
+    avatar = models.ImageField(upload_to="img/users/%Y/%m")
     telephone = models.CharField(max_length=12, null=False, default='000000000')
 
 
 class ShippingContact(models.Model):
     name = models.CharField(max_length=255, null=False, default='')
     address = models.CharField(max_length=255, null=False, default='')
-    addressType = models.CharField(max_length=255, null=False, default='Home')
-    defaultAddress = models.BooleanField(null=False, default=False)
+    address_type = models.CharField(max_length=255, null=False, default='Home')
+    default_address = models.BooleanField(null=False, default=False)
     user = models.ForeignKey(User, on_delete= models.SET_NULL, null=True)
 
 
 class Category(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
-    image = models.ImageField(null=True, upload_to='uploads/%Y/%m')
+    image_outline = models.ImageField(null=False, default= None, upload_to='img/categories/%Y/%m')
+    image_solid = models.ImageField(null=False, default= None,upload_to='img/categories/%Y/%m')
+
+    def __str__(self):
+        return self.name
 
 
 class Product(models.Model):
@@ -26,25 +31,28 @@ class Product(models.Model):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class ProductAttribute(models.Model):
-    def __init__(self):
-        pass
-
-    sku = models.CharField(max_length=100, primary_key=True, unique=True)
+    sku = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     color = models.CharField(max_length=100, null=False)
-    saleOff = models.FloatField(null=True)
-    onStock = models.IntegerField(null=False, default=1)
+    sale_off = models.FloatField(null=True)
+    on_stock = models.IntegerField(null=False, default=1)
     price = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     active = models.BooleanField(null=False, default=False)
     product = models.ForeignKey(Product, null=True, on_delete=models.SET_NULL)
 
-class ProductImage(models.Model):
-    def __init__(self):
-        pass
+    def __str__(self):
+        return self.product.name +" "+ self.color
 
-    image = models.ImageField(null=True, upload_to='uploads/%Y/%m')
-    productAttr = models.ForeignKey(ProductAttribute, null=True, on_delete=models.SET_NULL)
+class ProductImage(models.Model):
+    image = models.ImageField(null=True, upload_to='img/products/%Y/%m')
+    product_attr = models.ForeignKey(ProductAttribute, null=True, on_delete=models.SET_NULL)
+
+    def image_tag(self):
+        return mark_safe('<img src="/static/%s" width="110" height="110"  />' % (self.image))
 
 
 class Bookmark(models.Model):
@@ -56,34 +64,46 @@ class BookmarkDetail(models.Model):
     productAttribute = models.ForeignKey(ProductAttribute, on_delete=models.SET_NULL, null=True)
 
 
+
+
 class ShippingUnit(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
-    image = models.ImageField(null=True, upload_to='uploads/%Y/%m')
+    image = models.ImageField(null=True, upload_to='img/shipping units/%Y/%m')
     telephone = models.CharField(max_length=12, null=False, default='000000000')
+
+    def image_tag(self):
+        return mark_safe('<img src="/static/%s" width="150"  />' % (self.image))
+
+    def __str__(self):
+        return self.name
 
 
 class ShippingType(models.Model):
     type = models.CharField(max_length=20, null=False, default="Standard")
-    minDate = models.IntegerField(null=False, default=1)
-    maxDate = models.IntegerField(null=False, default=1)
-    shippingUnit = models.ForeignKey(ShippingUnit, on_delete=models.SET_NULL, null=True)
+    min_date = models.IntegerField(null=False, default=1) 
+    max_date = models.IntegerField(null=False, default=1)
+    price_per_Km = models.DecimalField(max_digits = 5, decimal_places = 2, default = 0.0)
+    shipping_unit = models.ForeignKey(ShippingUnit, on_delete=models.CASCADE, null=True)
+    
+    def __str__(self):
+        return self.shipping_unit.name + " (" + self.type +")"
 
 
 class Order(models.Model):
-    shippingType = models.ForeignKey(ShippingType, on_delete=models.SET_NULL, null=True)
-    shippedDate = models.DateTimeField(auto_now_add=True, blank=True)
-    deliveryPrice = models.DecimalField(max_digits = 5, decimal_places = 2)
-    shippedPrice = models.DecimalField(max_digits = 5, decimal_places = 2)
+    shipping_type = models.ForeignKey(ShippingType, on_delete=models.SET_NULL, null=True)
+    shipped_date = models.DateTimeField(auto_now_add=True, blank=True)
+    delivery_price = models.DecimalField(max_digits = 5, decimal_places = 2)
+    shipped_price = models.DecimalField(max_digits = 5, decimal_places = 2)
     discount = models.FloatField(null =False, default=0)
-    totalPrice = models.DecimalField(max_digits = 5, decimal_places = 2)
+    total_price = models.DecimalField(max_digits = 5, decimal_places = 2)
     status = models.IntegerField(max_length=1, null=False, default=1)
     user = models.ForeignKey(User, on_delete= models.SET_NULL, null=True)
 
 
 class OrderDetail(models.Model):
-    product = models.ForeignKey(ProductAttribute, on_delete= models.SET_NULL, null=True)
+    product_attribute = models.ForeignKey(ProductAttribute, on_delete= models.SET_NULL, null=True)
     quantity = models.IntegerField(null=False, default=1)
-    unitPrice = models.DecimalField(max_digits = 5, decimal_places = 2)
+    unit_price = models.DecimalField(max_digits = 5, decimal_places = 2)
 
 
 class Review(models.Model):
