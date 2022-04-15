@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import environ
+
+# Initialise environment 
+env = environ.Env()
+
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-99gc0c4qwe58$@ebvn=zd8&^tx*7u@bo&k@_&lou*a*00)vwgb'
+
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -85,9 +92,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'eCommercialdb',
-        'USER': 'root',
-        'PASSWORD': 'ToFu!475632891',
-        'HOST': ''
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_5fkEGPrMOAWh_2V',
+        'HOST': 'db-mysql-sgp1-29271-do-user-11360852-0.b.db.ondigitalocean.com',
+        'PORT': '25060'
     },
 }
 
