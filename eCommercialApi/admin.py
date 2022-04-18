@@ -1,7 +1,9 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit
 from django.utils.html import mark_safe
 from django.contrib.auth.models import Permission
+
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "rating","description", "category"]
@@ -28,14 +30,20 @@ class ProductImageAdmin(admin.ModelAdmin):
 class ShippingTypeAdmin(admin.ModelAdmin):
     list_display = ["__str__", "min_date", "max_date", "price_per_Km"]
     search_fields = ["shipping_unit__name","type"]
+
+
+class eCommercialAdminSite(admin.AdminSite):
+    site_header = 'eCommercialApp'
+    site_title = 'eCommercialApp'
     
+admin_site = eCommercialAdminSite('eCommercialApi')
 
 #Register your models here.
-admin.site.register(Permission)
-admin.site.register(Category)
-admin.site.register(Product, ProductAdmin)
-admin.site.register(ProductAttribute, ProductAttributeAdmin)
-admin.site.register(ProductImage, ProductImageAdmin)
-admin.site.register(ShippingUnit, ShippingUnitAdmin)
-admin.site.register(ShippingType, ShippingTypeAdmin)
-admin.site.register(User)
+admin_site.register(Permission)
+admin_site.register(Category)
+admin_site.register(Product, ProductAdmin)
+admin_site.register(ProductAttribute, ProductAttributeAdmin)
+admin_site.register(ProductImage, ProductImageAdmin)
+admin_site.register(ShippingUnit, ShippingUnitAdmin)
+admin_site.register(ShippingType, ShippingTypeAdmin)
+admin_site.register(User)
