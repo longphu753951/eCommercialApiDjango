@@ -91,11 +91,11 @@ WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eCommercialdb',
-        'USER': 'doadmin',
-        'PASSWORD': 'AVNS_5fkEGPrMOAWh_2V',
-        'HOST': 'db-mysql-sgp1-29271-do-user-11360852-0.b.db.ondigitalocean.com',
-        'PORT': '25060'
+        'NAME': env('NAME'),
+        'USER': env('USER'),
+        'PASSWORD': env('PASSWORD'),
+        'HOST': env('HOST'),
+        'PORT': env('PORT')
     },
 }
 
