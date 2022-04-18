@@ -18,9 +18,14 @@ from .admin import admin_site
 from django.shortcuts import redirect
 from django.urls import path, include
 from . import views
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register('categories', views.CategoryViewSet)
 
 urlpatterns = [
     # path('',include('eCommercialApi.urls')),
     path('admin/', admin_site.urls),
-    path('', lambda request: redirect('admin/', permanent=True))
+    # path('', lambda request: redirect('admin/', permanent=True))
+    path('', include(router.urls))
 ]
