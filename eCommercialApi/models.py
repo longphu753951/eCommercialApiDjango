@@ -42,14 +42,14 @@ class ProductAttribute(models.Model):
     on_stock = models.IntegerField(null=False, default=1)
     price = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     active = models.BooleanField(null=False, default=False)
-    product = models.ForeignKey(Product, null=True, on_delete=models.SET_NULL)
+    product = models.ForeignKey(Product, null=True, related_name='productAttribute', on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.product.name +" "+ self.color
 
 class ProductImage(models.Model):
     image = models.ImageField(null=True, upload_to='img/products/%Y/%m')
-    product_attr = models.ForeignKey(ProductAttribute, null=True, on_delete=models.SET_NULL)
+    productAttribute = models.ForeignKey(ProductAttribute, null=True, related_name='productImage', on_delete=models.SET_NULL)
 
     def image_tag(self):
         return mark_safe('<img src="/static/%s" width="110" height="110"  />' % (self.image))

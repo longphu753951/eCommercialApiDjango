@@ -22,9 +22,9 @@ class ShippingUnitAdmin(admin.ModelAdmin):
 
 
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ["product_attr", "image_tag"]
-    search_fields = [ "product_attr__product__name", "product_attr__color"]
-    list_filter = ["product_attr"]
+    list_display = ["productAttribute", "image_tag"]
+    search_fields = [ "productAttribute__product__name", "productAttribute__color"]
+    list_filter = ["productAttribute"]
 
 
 class ShippingTypeAdmin(admin.ModelAdmin):
