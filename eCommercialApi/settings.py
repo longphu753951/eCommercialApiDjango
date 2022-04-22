@@ -32,7 +32,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.13', '68.183.236.170']
 
 
 # Application definition
@@ -94,11 +94,11 @@ print(env('USER'))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('NAME'),
+        'NAME': 'eCommercialdb',
         'USER': 'doadmin',
-        'PASSWORD': env('PASSWORD'),
-        'HOST': env('HOST'),
-        'PORT': env('PORT'),
+        'PASSWORD': 'AVNS_5fkEGPrMOAWh_2V',
+        'HOST': 'db-mysql-sgp1-29271-do-user-11360852-0.b.db.ondigitalocean.com',
+        'PORT': '25060',
     },
 }
 

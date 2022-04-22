@@ -6,7 +6,7 @@ from django.contrib.auth.models import Permission
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "rating","description", "category"]
+    list_display = ["id", "name", "image_tag", "rating","description", "category"]
     search_fields = [ "name", "category__name"]
     list_filter = ["category__name"]
     exclude = ['rating']

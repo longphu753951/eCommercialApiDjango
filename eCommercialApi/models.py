@@ -29,7 +29,11 @@ class Product(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
     rating = models.FloatField(null=False, default=0.0)
     description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    defaultImage = models.ImageField(null=True, upload_to='img/defaultImageProduct/%Y/%m')
+    category = models.ForeignKey(Category,related_name="products", on_delete=models.SET_NULL, null=True)
+
+    def image_tag(self):
+        return mark_safe('<img src="/static/%s" width="110" height="110"  />' % self.defaultImage)
 
     def __str__(self):
         return self.name
