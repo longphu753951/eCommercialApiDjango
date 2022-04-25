@@ -27,6 +27,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=255, null=False, unique=True)
+    defaultPrice = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     rating = models.FloatField(null=False, default=0.0)
     description = models.TextField(null=True, blank=True)
     defaultImage = models.ImageField(null=True, upload_to='img/defaultImageProduct/%Y/%m')

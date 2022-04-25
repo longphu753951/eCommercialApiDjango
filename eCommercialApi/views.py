@@ -15,11 +15,11 @@ class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
     # permission_classes = [permissions.IsAuthenticated]
 
-    def get_permissions(self):
-        if self.action == 'list':
-            return [permissions.AllowAny()]
+    # def get_permissions(self):
+    #     if self.action == 'list':
+    #         return [permissions.AllowAny()]
 
-        return [permissions.IsAuthenticated()]
+    #     return [permissions.IsAuthenticated()]
 
     @action(methods=['get'], detail=True, url_path='products')
     # product/

@@ -30,9 +30,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-99gc0c4qwe58$@ebvn=zd8&^tx*7u@bo&k@_&lou*a*00)vwgb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.13', '68.183.236.170']
+ALLOWED_HOSTS = ['192.168.1.13', '192.168.1.23', '68.183.236.170', '127.0.0.1']
 
 
 # Application definition
@@ -90,7 +90,6 @@ WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-print(env('USER'))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -142,6 +141,13 @@ STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_root/')
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root/')
+
+if DEBUG:
+        STATICFILES_DIRS = [
+            os.path.join(BASE_DIR, 'static')
+       ]
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 
 
 # Default primary key field type
