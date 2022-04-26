@@ -6,14 +6,15 @@ from django.contrib.auth.models import Permission
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "image_tag", "rating","description", "category"]
-    search_fields = [ "name", "category__name"]
+    list_display = ["id", "name", "rating", "description", "category"]
+    search_fields = ["name", "category__name"]
     list_filter = ["category__name"]
     exclude = ['rating']
 
+
 class ProductAttributeAdmin(admin.ModelAdmin):
-    list_display = ["sku", "product", "color", "sale_off","on_stock", "active"]
-    search_fields = [ "product__name"]
+    list_display = ["sku", "product", "color", "sale_off", "on_stock", "active"]
+    search_fields = ["product__name"]
     list_filter = ["product__name"]
 
 
@@ -22,23 +23,24 @@ class ShippingUnitAdmin(admin.ModelAdmin):
 
 
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ["productAttribute", "image_tag"]
-    search_fields = [ "productAttribute__product__name", "productAttribute__color"]
+    list_display = ["productAttribute", "image"]
+    search_fields = ["productAttribute__product__name", "productAttribute__color"]
     list_filter = ["productAttribute"]
 
 
 class ShippingTypeAdmin(admin.ModelAdmin):
     list_display = ["__str__", "min_date", "max_date", "price_per_Km"]
-    search_fields = ["shipping_unit__name","type"]
+    search_fields = ["shipping_unit__name", "type"]
 
 
 class eCommercialAdminSite(admin.AdminSite):
     site_header = 'eCommercialApp'
     site_title = 'eCommercialApp'
-    
+
+
 admin_site = eCommercialAdminSite('eCommercialApi')
 
-#Register your models here.
+# Register your models here.
 admin_site.register(Permission)
 admin_site.register(Category)
 admin_site.register(Product, ProductAdmin)

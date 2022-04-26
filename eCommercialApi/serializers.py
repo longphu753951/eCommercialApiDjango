@@ -1,3 +1,4 @@
+from django.db.models import Min
 from rest_framework import serializers
 from .models import Category, Product, ProductAttribute, ProductImage
 
@@ -25,22 +26,6 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name", "image_outline", "image_solid"]
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    defaultImage = serializers.SerializerMethodField(source='defaultImage')
-
-    def get_defaultImage(self, obj):
-        print(self.context['request'])
-        request = self.context['request']
-        if obj.defaultImage and not obj.defaultImage.name.startswith('/static'):
-            path = '/static/%s' % obj.defaultImage.name
-
-            return request.build_absolute_uri(path)
-
-    class Meta:
-        model = Product
-        fields = ["id", "name", "rating", "description", "defaultPrice", "defaultImage", "category"]
-
-
 class ProductImageSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField(source='image')
 
@@ -61,4 +46,18 @@ class ProductAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductAttribute
-        fields = ["sku", "color", "sale_off", "on_stock", "price", "active", "product", "productImage"]
+        fields = ["sku", "color", "hexColor", "sale_off", "on_stock", "price", "active", "product", "productImage"]
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    productAttribute = serializers.SerializerMethodField('get_productAttribute')
+    product = Product.objects
+
+    def get_productAttribute(self, product):
+        serializer_context = {'request': self.context.get('request')}
+        source = product.productAttribute.annotate(Min('price')).order_by('price')[0]
+        return ProductAttributeSerializer(instance=source, many=False, context= serializer_context).data
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "rating", "description", "category", 'productAttribute']

@@ -28,7 +28,7 @@ class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
         category = Category.objects.get(pk=pk)
         products = category.products.all()
 
-        return Response(data=ProductSerializer(products, many=True, context = context).data,
+        return Response(data=ProductSerializer(products, many=True, context=context).data,
                         status=status.HTTP_200_OK)
 
 
@@ -50,7 +50,7 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
         product = Product.objects.get(pk=pk)
         product_attributes = product.productAttribute.all()
 
-        return Response(data=ProductAttributeSerializer(product_attributes, many=True, context = context).data,
+        return Response(data=ProductAttributeSerializer(product_attributes, many=True, context=context).data,
                         status=status.HTTP_200_OK)
 
 

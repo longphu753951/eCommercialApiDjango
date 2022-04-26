@@ -46,10 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'eCommercialApi.app.ECommercialApiConfig',
     'oauth2_provider',
+    'django_filters',
+    'colorfield',
     'rest_framework'
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
     ),
