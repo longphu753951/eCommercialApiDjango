@@ -56,7 +56,15 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_productAttribute(self, product):
         serializer_context = {'request': self.context.get('request')}
         source = product.productAttribute.annotate(Min('price')).order_by('price')[0]
-        return ProductAttributeSerializer(instance=source, many=False, context= serializer_context).data
+        return ProductAttributeSerializer(instance=source, many=False, context=serializer_context).data
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "rating", "description", "category", 'productAttribute']
+
+
+class ProductDetailSerializer(serializers.ModelSerializer):
+    productAttribute = ProductAttributeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
