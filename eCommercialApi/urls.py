@@ -24,12 +24,13 @@ router = DefaultRouter()
 router.register(prefix='categories', viewset=views.CategoryViewSet, basename='category')
 router.register(prefix='products', viewset=views.ProductViewSet, basename='product')
 router.register(prefix='productAttribute', viewset=views.ProductAttributeViewSet, basename='productAttribute')
+router.register('users', views.UserViewSet)
 
 
 urlpatterns = [
     # path('',include('eCommercialApi.urls')),
     path('admin/', admin_site.urls),
     # path('', lambda request: redirect('admin/', permanent=True))
-    path('', include(router.urls))
-    
+    path('', include(router.urls)),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider'))
 ]

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='Bookmark',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('users', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('address', models.CharField(default='', max_length=255)),
                 ('addressType', models.CharField(default='Home', max_length=255)),
                 ('defaultAddress', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('users', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                 ('rating', models.FloatField(default=0.0)),
                 ('detail', models.TextField(blank=True, null=True)),
                 ('product', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='eCommercialApi.product')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('users', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
                 ('totalPrice', models.DecimalField(decimal_places=2, max_digits=5)),
                 ('status', models.IntegerField(default=1, max_length=1)),
                 ('shippingType', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='eCommercialApi.shippingtype')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('users', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(

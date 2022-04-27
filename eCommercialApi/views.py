@@ -4,16 +4,31 @@ from django.template.context_processors import request
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Category, Product, ProductAttribute
+from rest_framework.parsers import  MultiPartParser
+from .models import Category, Product, ProductAttribute, User
 from .paginators import ProductPaginator
-from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer
+from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, UserSerializer
+
+
+class UserViewSet(viewsets.ViewSet,
+                  generics.CreateAPIView,
+                  generics.RetrieveAPIView):
+    queryset = User.objects.filter(is_active=True)
+    serializer_class = UserSerializer
+    parser_classes = [MultiPartParser, ]
+    permission_classes = [permissions.AllowAny]
+
+    def get_permissions(self):
+        if self.action == 'retrieve':
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
 
 
 class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     # def get_permissions(self):
     #     if self.action == 'list':
@@ -41,10 +56,10 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     pagination_class = ProductPaginator
 
     # def get_permissions(self):
-        # if self.action == 'list':
-            # return [permissions.AllowAny()]
+    # if self.action == 'list':
+    # return [permissions.AllowAny()]
 
-        # return [permissions.IsAuthenticated()]
+    # return [permissions.IsAuthenticated()]
 
     @action(methods=['get'], detail=True, url_path='productAttributes')
     # product/

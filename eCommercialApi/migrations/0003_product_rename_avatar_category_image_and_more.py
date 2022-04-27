@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             new_name='image',
         ),
         migrations.AlterField(
-            model_name='user',
+            model_name='users',
             name='avatar',
             field=models.ImageField(upload_to='users/%Y/%m'),
         ),

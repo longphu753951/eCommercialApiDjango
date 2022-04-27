@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             field=models.ImageField(null=True, upload_to='img/shipping units/%Y/%m'),
         ),
         migrations.AlterField(
-            model_name='user',
+            model_name='users',
             name='avatar',
             field=models.ImageField(upload_to='img/users/%Y/%m'),
         ),

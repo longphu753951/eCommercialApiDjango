@@ -1,6 +1,6 @@
 from django.db.models import Min
 from rest_framework import serializers
-from .models import Category, Product, ProductAttribute, ProductImage
+from .models import Category, Product, ProductAttribute, ProductImage, User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -69,3 +69,20 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ["id", "name", "rating", "description", "category", 'productAttribute']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar']
+        extra_kwargs = {
+            'password': {'write_only': 'true'}
+        }
+
+    def create(self, validated_data):
+        user = User(**validated_data)
+        print(validated_data['password'])
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user

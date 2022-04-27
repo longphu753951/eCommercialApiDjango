@@ -193,7 +193,7 @@ Requires core.js and SelectBox.js.
         },
         filter_key_press: function(event, field_id) {
             const from = document.getElementById(field_id + '_from');
-            // don't submit form if user pressed Enter
+            // don't submit form if users pressed Enter
             if ((event.which && event.which === 13) || (event.keyCode && event.keyCode === 13)) {
                 from.selectedIndex = 0;
                 SelectBox.move(field_id + '_from', field_id + '_to');

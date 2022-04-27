@@ -1370,7 +1370,7 @@ var jsc = {
 			jsc.releaseTarget();
 
 			// Always trigger changes AFTER detaching outstanding mouse handlers,
-			// in case some color change that occured in user-defined onChange/onInput handler
+			// in case some color change that occured in users-defined onChange/onInput handler
 			// intruded into current mouse events
 			thisObj.trigger('input');
 			thisObj.trigger('change');
@@ -1693,8 +1693,8 @@ var jsc = {
 		this.alphaChannel = 'auto'; // 'auto' | true | false - if alpha channel is enabled, the alpha slider will be visible. If 'auto', it will be determined according to color format
 		this.position = 'bottom'; // 'left' | 'right' | 'top' | 'bottom' - position relative to the target element
 		this.smartPosition = true; // automatically change picker position when there is not enough space for it
-		this.showOnClick = true; // whether to show the picker when user clicks its target element
-		this.hideOnLeave = true; // whether to automatically hide the picker when user leaves its target element (e.g. upon clicking the document)
+		this.showOnClick = true; // whether to show the picker when users clicks its target element
+		this.hideOnLeave = true; // whether to automatically hide the picker when users leaves its target element (e.g. upon clicking the document)
 		this.palette = []; // colors to be displayed in the palette, specified as an array or a string of space separated color values (in any supported format)
 		this.paletteCols = 10; // number of columns in the palette
 		this.paletteSetsAlpha = 'auto'; // 'auto' | true | false - if true, palette colors that don't specify alpha will set alpha to 1.0

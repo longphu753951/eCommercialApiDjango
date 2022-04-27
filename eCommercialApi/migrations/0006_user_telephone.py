@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='user',
+            model_name='users',
             name='telephone',
             field=models.CharField(default='000000000', max_length=12),
         ),
