@@ -33,13 +33,10 @@ class UserViewSet(viewsets.ViewSet,
 class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         return [permissions.AllowAny()]
+    # permission_classes = [permissions.IsAuthenticated]
 
-    #     return [permissions.IsAuthenticated()]
+
 
     @action(methods=['get'], detail=True, url_path='product')
     # product/
