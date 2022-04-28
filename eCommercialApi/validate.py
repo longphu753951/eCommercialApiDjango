@@ -11,9 +11,15 @@ class MyOAuth2Validator(OAuth2Validator):  # pylint: disable=w0223
     def validate_user(self, username, password, client, request, *args, **kwargs):
         """ Here, you would be able to access the MOBILE/ OTP fields
             which you will be sending in the request.post body. """
-        user = USER_MODEL.objects.get(telephone=request.telephone)
-        check_password = user.check_password(password)
-        if user is not None and user.is_active and check_password is True:
-            request.user = user
-            return True
+        try:
+            user = USER_MODEL.objects.get(telephone=request.telephone)
+            if user is not None and user.is_active:
+                check_password = user.check_password(password)
+                if check_password is True:
+                    request.user = user
+                    return True
+
+        except:
+            print('telephone does not exit')
+
         return False
