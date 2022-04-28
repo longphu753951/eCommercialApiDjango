@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit
-from django.utils.html import mark_safe
 from django.contrib.auth.models import Permission
 
 

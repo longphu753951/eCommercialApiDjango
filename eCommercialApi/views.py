@@ -4,10 +4,11 @@ from django.template.context_processors import request
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.parsers import  MultiPartParser
+from rest_framework.parsers import MultiPartParser
 from .models import Category, Product, ProductAttribute, User
 from .paginators import ProductPaginator
-from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, UserSerializer
+from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
+    UserSerializer
 
 
 class UserViewSet(viewsets.ViewSet,
@@ -18,8 +19,12 @@ class UserViewSet(viewsets.ViewSet,
     parser_classes = [MultiPartParser, ]
     permission_classes = [permissions.AllowAny]
 
+    @action(methods=['get'], detail=False, url_path="current-user")
+    def get_current_user(self, request):
+        return Response(self.serializer_class(request.user).data, status=status.HTTP_200_OK)
+
     def get_permissions(self):
-        if self.action == 'retrieve':
+        if self.action == 'get_current_user':
             return [permissions.IsAuthenticated()]
 
         return [permissions.AllowAny()]

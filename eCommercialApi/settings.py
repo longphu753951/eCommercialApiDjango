@@ -90,6 +90,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 
+OAUTH2_PROVIDER = {
+    'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
+}
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+]
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
