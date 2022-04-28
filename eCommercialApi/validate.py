@@ -1,5 +1,4 @@
 from oauth2_provider.oauth2_validators import OAuth2Validator
-from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import get_user_model
 
 USER_MODEL = get_user_model()
