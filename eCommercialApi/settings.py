@@ -21,7 +21,6 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -33,7 +32,6 @@ SECRET_KEY = 'django-insecure-99gc0c4qwe58$@ebvn=zd8&^tx*7u@bo&k@_&lou*a*00)vwgb
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.13', '192.168.1.23', '68.183.236.170', '127.0.0.1']
-
 
 # Application definition
 
@@ -91,6 +89,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 
 OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
     'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
 }
 
@@ -133,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -144,7 +142,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
