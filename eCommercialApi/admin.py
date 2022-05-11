@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit
+from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit, Bookmark
 from django.contrib.auth.models import Permission
 
 
@@ -32,6 +32,10 @@ class ShippingTypeAdmin(admin.ModelAdmin):
     search_fields = ["shipping_unit__name", "type"]
 
 
+class BookmarkTypeAdmin(admin.ModelAdmin):
+    list_display = ["id", "user"]
+
+
 class eCommercialAdminSite(admin.AdminSite):
     site_header = 'eCommercialApp'
     site_title = 'eCommercialApp'
@@ -47,5 +51,6 @@ admin_site.register(ProductAttribute, ProductAttributeAdmin)
 admin_site.register(ProductImage, ProductImageAdmin)
 admin_site.register(ShippingUnit, ShippingUnitAdmin)
 admin_site.register(ShippingType, ShippingTypeAdmin)
+admin_site.register(Bookmark, BookmarkTypeAdmin)
 admin_site.register(User)
 admin_site.register(Group)

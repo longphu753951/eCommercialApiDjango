@@ -61,11 +61,11 @@ class ProductImage(models.Model):
 
 
 class Bookmark(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, null=True, related_name='bookmark', on_delete=models.SET_NULL)
 
 
 class BookmarkDetail(models.Model):
-    bookmark = models.ForeignKey(Bookmark, on_delete=models.SET_NULL, null=True)
+    bookmark = models.ForeignKey(Bookmark, related_name='bookmarkDetail', on_delete=models.SET_NULL, null=True)
     productAttribute = models.ForeignKey(ProductAttribute, on_delete=models.SET_NULL, null=True)
 
 

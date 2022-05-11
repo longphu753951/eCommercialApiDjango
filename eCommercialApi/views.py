@@ -1,14 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.context_processors import request
-from rest_framework import viewsets, generics, status, permissions
+from oauth2_provider.oauth2_validators import AccessToken
+from rest_framework import viewsets, generics, status, permissions, response
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from .models import Category, Product, ProductAttribute, User
+from .models import Category, Product, ProductAttribute, User, Bookmark
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer
+    UserSerializer, BookmarkSerializer
 
 
 class UserViewSet(viewsets.ViewSet,
@@ -21,7 +22,8 @@ class UserViewSet(viewsets.ViewSet,
 
     @action(methods=['get'], detail=False, url_path="current-user")
     def get_current_user(self, request):
-        return Response(self.serializer_class(request.user).data, status=status.HTTP_200_OK)
+        context = super().get_serializer_context()
+        return Response(self.serializer_class(request.user, context=context).data, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         if self.action == 'get_current_user':
@@ -29,14 +31,22 @@ class UserViewSet(viewsets.ViewSet,
 
         return [permissions.AllowAny()]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = User.objects.get(id=serializer.data["id"])
+        b = Bookmark(user=user)
+        b.save()
+
+        return Response('test', status=status.HTTP_200_OK)
+
 
 class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
     # permission_classes = [permissions.IsAuthenticated]
-
-
 
     @action(methods=['get'], detail=True, url_path='product')
     # product/
@@ -65,12 +75,29 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
     @action(methods=['get'], detail=True, url_path='productAttributes')
     # product/
-    def get_product_attribute(self, query, pk):
+    def get_queryset(self, query, pk):
         context = super().get_serializer_context()
         product = Product.objects.get(pk=pk)
         product_attributes = product.productAttribute.all()
 
         return Response(data=ProductAttributeSerializer(product_attributes, many=True, context=context).data,
+                        status=status.HTTP_200_OK)
+
+
+class BookmarkViewSet(viewsets.ModelViewSet, generics.ListAPIView):
+    serializer_class = BookmarkSerializer
+
+    @action(methods=['get'], detail=True)
+    # product/
+    def get_queryset(self, query, pk):
+        context = super().get_serializer_context()
+        token = AccessToken.objects.get(token=response.data['access_token'])
+        print(token)
+        user = token.user
+
+        bookmark = Bookmark.objects.get(user=user)
+
+        return Response(data=BookmarkSerializer(bookmark, many=True, context=context).data,
                         status=status.HTTP_200_OK)
 
 

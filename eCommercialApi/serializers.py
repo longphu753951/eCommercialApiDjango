@@ -1,6 +1,6 @@
 from django.db.models import Min
 from rest_framework import serializers
-from .models import Category, Product, ProductAttribute, ProductImage, User
+from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -71,12 +71,47 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "rating", "description", "category", 'productAttribute']
 
 
+class BookmarkDetailSerializer(serializers.ModelSerializer):
+    productAttribute = ProductAttributeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = BookmarkDetail
+        fields = ["id", "bookmark", "productAttribute"]
+
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    bookmarkDetail = BookmarkDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Bookmark
+        fields = ["id", "user", "bookmarkDetail"]
+
+
 class UserSerializer(serializers.ModelSerializer):
+    avatar_path = serializers.SerializerMethodField(source='avatar')
+    bookmark = BookmarkSerializer(many=True, read_only=True)
+
+    def get_avatar_path(self, obj):
+        request = self.context['request']
+        print(obj.bookmark)
+        if obj.avatar and not obj.avatar.name.startswith('/static'):
+            path = '/static/%s' % obj.avatar.name
+
+            return request.build_absolute_uri(path)
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar']
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+                  'avatar_path', 'bookmark']
         extra_kwargs = {
-            'password': {'write_only': 'true'}
+            'password': {
+                'write_only': 'true'
+            },
+            'avatar_path': {
+                'read_only': True
+            }, 'avatar': {
+                'write_only': True
+            }
         }
 
     def create(self, validated_data):
