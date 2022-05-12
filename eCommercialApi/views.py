@@ -9,21 +9,21 @@ from rest_framework.parsers import MultiPartParser
 from .models import Category, Product, ProductAttribute, User, Bookmark
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer
 
 
 class UserViewSet(viewsets.ViewSet,
                   generics.CreateAPIView,
                   generics.RetrieveAPIView):
     queryset = User.objects.filter(is_active=True)
-    serializer_class = UserSerializer
+    serializer_class = CreateUserSerializer
     parser_classes = [MultiPartParser, ]
     permission_classes = [permissions.AllowAny]
 
     @action(methods=['get'], detail=False, url_path="current-user")
     def get_current_user(self, request):
         context = super().get_serializer_context()
-        return Response(self.serializer_class(request.user, context=context).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(request.user, context=context).data, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         if self.action == 'get_current_user':
@@ -75,7 +75,7 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
     @action(methods=['get'], detail=True, url_path='productAttributes')
     # product/
-    def get_queryset(self, query, pk):
+    def get_product_attribute(self, query, pk):
         context = super().get_serializer_context()
         product = Product.objects.get(pk=pk)
         product_attributes = product.productAttribute.all()

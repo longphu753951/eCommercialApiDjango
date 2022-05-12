@@ -42,16 +42,16 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductAttributeSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='__str__')
     productImage = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProductAttribute
-        fields = ["sku", "color", "hexColor", "sale_off", "on_stock", "price", "active", "product", "productImage"]
+        fields = ["sku", "color", "hexColor", "sale_off", "on_stock", "price", "active", "name", "productImage"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
     productAttribute = serializers.SerializerMethodField('get_productAttribute')
-    product = Product.objects
 
     def get_productAttribute(self, product):
         serializer_context = {'request': self.context.get('request')}
@@ -72,11 +72,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 
 class BookmarkDetailSerializer(serializers.ModelSerializer):
-    productAttribute = ProductAttributeSerializer(many=True, read_only=True)
+    productAttribute = ProductAttributeSerializer()
 
     class Meta:
         model = BookmarkDetail
-        fields = ["id", "bookmark", "productAttribute"]
+        fields = ["id", "productAttribute"]
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
@@ -84,16 +84,22 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bookmark
-        fields = ["id", "user", "bookmarkDetail"]
+        fields = ["id", "bookmarkDetail"]
 
 
 class UserSerializer(serializers.ModelSerializer):
     avatar_path = serializers.SerializerMethodField(source='avatar')
-    bookmark = BookmarkSerializer(many=True, read_only=True)
+    bookmark = serializers.SerializerMethodField('get_bookmark')
+    user = User.objects
+
+    def get_bookmark(self, user):
+        bookmark = Bookmark.objects
+        serializer_context = {'request': self.context.get('request')}
+        source = bookmark.get(user=user)
+        return BookmarkSerializer(instance=source, many=False, context=serializer_context).data
 
     def get_avatar_path(self, obj):
         request = self.context['request']
-        print(obj.bookmark)
         if obj.avatar and not obj.avatar.name.startswith('/static'):
             path = '/static/%s' % obj.avatar.name
 
@@ -105,7 +111,42 @@ class UserSerializer(serializers.ModelSerializer):
                   'avatar_path', 'bookmark']
         extra_kwargs = {
             'password': {
-                'write_only': 'true'
+                'write_only': True
+            },
+            'avatar_path': {
+                'read_only': True
+            }, 'avatar': {
+                'write_only': True
+            }
+        }
+
+    def create(self, validated_data):
+        user = User(**validated_data)
+        print(validated_data['password'])
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    avatar_path = serializers.SerializerMethodField(source='avatar')
+    user = User.objects
+
+    def get_avatar_path(self, obj):
+        request = self.context['request']
+        if obj.avatar and not obj.avatar.name.startswith('/static'):
+            path = '/static/%s' % obj.avatar.name
+
+            return request.build_absolute_uri(path)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+                  'avatar_path']
+        extra_kwargs = {
+            'password': {
+                'write_only': True
             },
             'avatar_path': {
                 'read_only': True

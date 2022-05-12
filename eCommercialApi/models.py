@@ -48,7 +48,7 @@ class ProductAttribute(models.Model):
     product = models.ForeignKey(Product, null=True, related_name='productAttribute', on_delete=models.SET_NULL)
 
     def __str__(self):
-        return self.product.name + " " + self.color
+        return self.product.name + " (" + self.color + ")"
 
 
 class ProductImage(models.Model):
@@ -66,7 +66,8 @@ class Bookmark(models.Model):
 
 class BookmarkDetail(models.Model):
     bookmark = models.ForeignKey(Bookmark, related_name='bookmarkDetail', on_delete=models.SET_NULL, null=True)
-    productAttribute = models.ForeignKey(ProductAttribute, on_delete=models.SET_NULL, null=True)
+    productAttribute = models.ForeignKey(ProductAttribute, related_name='bookmarkDetail', on_delete=models.SET_NULL,
+                                         null=True)
 
 
 class ShippingUnit(models.Model):

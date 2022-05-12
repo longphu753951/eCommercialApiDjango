@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit, Bookmark
+from .models import User, Category, Product, ProductAttribute, ProductImage, ShippingType, ShippingUnit, Bookmark, \
+    BookmarkDetail
 from django.contrib.auth.models import Permission
 
 
@@ -52,5 +53,6 @@ admin_site.register(ProductImage, ProductImageAdmin)
 admin_site.register(ShippingUnit, ShippingUnitAdmin)
 admin_site.register(ShippingType, ShippingTypeAdmin)
 admin_site.register(Bookmark, BookmarkTypeAdmin)
+admin_site.register(BookmarkDetail)
 admin_site.register(User)
 admin_site.register(Group)
