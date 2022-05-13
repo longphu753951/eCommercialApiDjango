@@ -82,19 +82,16 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
 
 class BookmarkViewSet(viewsets.ModelViewSet, generics.ListAPIView):
+    queryset = Bookmark.objects
     serializer_class = BookmarkSerializer
 
-    @action(methods=['get'], detail=True)
+    @action(methods=['get'], detail=False)
     # product/
     def get_queryset(self):
         context = super().get_serializer_context()
-
         user = self.request.user
 
-        bookmark = Bookmark.objects.get(user=user)
-
-        return Response(data=self.serializer_class(bookmark, many=False, context=context).data,
-                        status=status.HTTP_200_OK)
+        return self.queryset.filter(user=user)
 
 
 class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.CreateAPIView):

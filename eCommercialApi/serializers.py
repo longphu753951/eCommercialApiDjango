@@ -87,7 +87,14 @@ class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
-    bookmarkDetail = BookmarkDetailSerializer(many=True, read_only=True)
+    bookmarkDetail = serializers.SerializerMethodField(source='get_bookmarkDetail')
+    bookmark = Bookmark.objects
+
+    def get_bookmarkDetail(self, bookmark):
+        bookmarkDetail = BookmarkDetail.objects
+        serializer_context = {'request': self.context.get('request')}
+        source = bookmarkDetail.filter(bookmark=bookmark)
+        return BookmarkDetailSerializer(instance=source, many=True, context=serializer_context).data
 
     class Meta:
         model = Bookmark
