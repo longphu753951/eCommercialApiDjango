@@ -1,15 +1,12 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-from django.template.context_processors import request
-from oauth2_provider.oauth2_validators import AccessToken
-from rest_framework import viewsets, generics, status, permissions, response
+from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer
 
 
 class UserViewSet(viewsets.ViewSet,
@@ -89,29 +86,19 @@ class BookmarkViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
     @action(methods=['get'], detail=True)
     # product/
-    def get_queryset(self, query, pk):
+    def get_queryset(self):
         context = super().get_serializer_context()
-        token = AccessToken.objects.get(token=response.data['access_token'])
-        print(token)
-        user = token.user
+
+        user = self.request.user
 
         bookmark = Bookmark.objects.get(user=user)
 
-        return Response(data=BookmarkSerializer(bookmark, many=True, context=context).data,
+        return Response(data=self.serializer_class(bookmark, many=False, context=context).data,
                         status=status.HTTP_200_OK)
 
-    # @action(methods=['post'], detail=True, url_path='addBookmarkDetail')
-    # # Add new bookmark attribute
-    # def add_bookmark_detail(self, query, pk):
-    # bookmark = request.bookmark
-    #     productAttribute = request.productAttribute
-    #     print(bookmark)
-    #
-    #     return Response(status=status.HTTP_201_CREATED)
 
-
-# class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
-#     serializer_class = BookmarkDetailCreateSerializer
+class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
+    serializer_class = BookmarkDetailCreateSerializer
 
 
 class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):

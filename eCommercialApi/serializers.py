@@ -79,11 +79,11 @@ class BookmarkDetailSerializer(serializers.ModelSerializer):
         fields = ["id", "bookmark", "productAttribute"]
 
 
-# class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = BookmarkDetail
-#         fields = ["id", "bookmark", "productAttribute"]
+class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = BookmarkDetail
+        fields = ["id", "bookmark", "productAttribute"]
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
