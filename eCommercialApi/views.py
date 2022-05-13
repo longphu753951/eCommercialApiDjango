@@ -6,10 +6,10 @@ from rest_framework import viewsets, generics, status, permissions, response
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from .models import Category, Product, ProductAttribute, User, Bookmark
+from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer, CreateUserSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer
 
 
 class UserViewSet(viewsets.ViewSet,
@@ -99,6 +99,19 @@ class BookmarkViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
         return Response(data=BookmarkSerializer(bookmark, many=True, context=context).data,
                         status=status.HTTP_200_OK)
+
+    # @action(methods=['post'], detail=True, url_path='addBookmarkDetail')
+    # # Add new bookmark attribute
+    # def add_bookmark_detail(self, query, pk):
+    # bookmark = request.bookmark
+    #     productAttribute = request.productAttribute
+    #     print(bookmark)
+    #
+    #     return Response(status=status.HTTP_201_CREATED)
+
+
+# class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
+#     serializer_class = BookmarkDetailCreateSerializer
 
 
 class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):

@@ -76,7 +76,14 @@ class BookmarkDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookmarkDetail
-        fields = ["id", "productAttribute"]
+        fields = ["id", "bookmark", "productAttribute"]
+
+
+# class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = BookmarkDetail
+#         fields = ["id", "bookmark", "productAttribute"]
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
@@ -119,14 +126,6 @@ class UserSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
-
-    def create(self, validated_data):
-        user = User(**validated_data)
-        print(validated_data['password'])
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
