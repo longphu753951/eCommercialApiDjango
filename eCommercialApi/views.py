@@ -85,17 +85,44 @@ class BookmarkViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = Bookmark.objects
     serializer_class = BookmarkSerializer
 
-    @action(methods=['get'], detail=False)
+    @action(methods=['get'], detail=False, url_path='getBookmarkByUser')
     # product/
-    def get_queryset(self):
+    def get_bookmark_by_user(self, query):
         context = super().get_serializer_context()
         user = self.request.user
+        bookmark = self.queryset.filter(user=user).first()
+        print(bookmark)
+        return Response(data=BookmarkSerializer(bookmark, many=False, context=context).data,
+                        status=status.HTTP_200_OK)
 
-        return self.queryset.filter(user=user)
 
-
-class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
+class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = Bookmark.objects
     serializer_class = BookmarkDetailCreateSerializer
+
+    @action(methods=['delete'], detail=False, url_path='deleteBookmark')
+    # product/
+    def delete_bookmark(self, query):
+        productAttribute = self.request.POST.get('productAttribute')
+        bookmark = self.request.POST.get('bookmark')
+        instance = BookmarkDetail.objects.filter(bookmark_id=bookmark).filter(
+            productAttribute_id=productAttribute)
+        instance.delete()
+        return Response(data="Deleted Successfully",
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=False, url_path="addBookmark")
+    def add_bookmark(self, query):
+        print(self.request)
+        productAttributeId = self.request.POST.get('productAttribute')
+        bookmarkId = self.request.POST.get('bookmark')
+        BookmarkDetail.objects.update_or_create(productAttribute_id=productAttributeId, bookmark_id=bookmarkId)
+        user = self.request.user
+        bookmark = self.queryset.filter(user=user).first()
+        print(bookmark)
+        context = super().get_serializer_context()
+        return Response(data=BookmarkSerializer(bookmark, many=False, context=context).data,
+                        status=status.HTTP_200_OK)
 
 
 class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):
