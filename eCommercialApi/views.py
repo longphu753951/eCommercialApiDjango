@@ -100,26 +100,25 @@ class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
     queryset = Bookmark.objects
     serializer_class = BookmarkDetailCreateSerializer
 
-    @action(methods=['delete'], detail=False, url_path='deleteBookmark')
+    @action(methods=['delete'], detail=False, url_path='deleteBookmark/(?P<my_pk>[^/.]+)')
     # product/
-    def delete_bookmark(self, query):
-        productAttribute = self.request.POST.get('productAttribute')
-        bookmark = self.request.POST.get('bookmark')
-        instance = BookmarkDetail.objects.filter(bookmark_id=bookmark).filter(
-            productAttribute_id=productAttribute)
+    def delete_bookmark(self, query, my_pk=None):
+        print(my_pk)
+        instance = BookmarkDetail.objects.filter(id=my_pk)
         instance.delete()
-        return Response(data="Deleted Successfully",
+        user = self.request.user
+        bookmark = self.queryset.filter(user=user).first()
+        context = super().get_serializer_context()
+        return Response(data=BookmarkSerializer(bookmark, many=False, context=context).data,
                         status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False, url_path="addBookmark")
     def add_bookmark(self, query):
-        print(self.request)
-        productAttributeId = self.request.POST.get('productAttribute')
-        bookmarkId = self.request.POST.get('bookmark')
+        productAttributeId = self.request.data['productAttribute']
+        bookmarkId = self.request.data['bookmark']
         BookmarkDetail.objects.update_or_create(productAttribute_id=productAttributeId, bookmark_id=bookmarkId)
         user = self.request.user
         bookmark = self.queryset.filter(user=user).first()
-        print(bookmark)
         context = super().get_serializer_context()
         return Response(data=BookmarkSerializer(bookmark, many=False, context=context).data,
                         status=status.HTTP_200_OK)
