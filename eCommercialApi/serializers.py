@@ -136,17 +136,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    avatar_path = serializers.SerializerMethodField('get_avatar_path')
+    avatar_path = serializers.SerializerMethodField(source='avatar')
     user = User.objects
 
     def get_avatar_path(self, obj):
         request = self.context['request']
-        path = '/static/img/users/147142.png'
-        return request.build_absolute_uri(path)
+        if obj.avatar and not obj.avatar.name.startswith('/static'):
+            path = '/static/%s' % obj.avatar.name
+
+            return request.build_absolute_uri(path)
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar_path']
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+                  'avatar_path']
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -160,6 +163,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User(**validated_data)
+        print(validated_data['password'])
         user.set_password(validated_data['password'])
         user.save()
 
