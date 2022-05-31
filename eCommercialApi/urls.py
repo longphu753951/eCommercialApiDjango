@@ -31,7 +31,7 @@ router.register('users', views.UserViewSet)
 
 urlpatterns = [
     # path('',include('eCommercialApi.urls')),
-    path('admin/', admin_site.urls),
+    path('admin', admin_site.urls),
     # path('', lambda request: redirect('admin/', permanent=True))
     path('', include(router.urls)),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider'))

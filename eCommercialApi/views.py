@@ -30,13 +30,14 @@ class UserViewSet(viewsets.ViewSet,
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        print(request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         user = User.objects.get(id=serializer.data["id"])
         b = Bookmark(user=user)
         b.save()
 
-        return Response('test', status=status.HTTP_200_OK)
+        return Response('Success', status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(viewsets.ModelViewSet, generics.ListAPIView):
