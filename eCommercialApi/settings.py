@@ -92,6 +92,8 @@ OAUTH2_PROVIDER = {
     'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
 }
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',

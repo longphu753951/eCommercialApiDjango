@@ -115,3 +115,4 @@ class Review(models.Model):
     detail = models.TextField(null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
