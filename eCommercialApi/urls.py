@@ -13,9 +13,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+from django.template.defaulttags import url
 from .admin import admin_site
-from django.shortcuts import redirect
 from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
@@ -34,5 +33,6 @@ urlpatterns = [
     path('admin', admin_site.urls),
     # path('', lambda request: redirect('admin/', permanent=True))
     path('', include(router.urls)),
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider'))
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('stripe/get_payment_method', views.get_all_payment, name='get_payment_pethod'),
 ]

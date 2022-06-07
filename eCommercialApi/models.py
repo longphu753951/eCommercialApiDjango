@@ -8,6 +8,7 @@ from colorfield.fields import ColorField
 class User(AbstractUser):
     avatar = models.ImageField(upload_to="img/users/%Y/%m")
     telephone = models.CharField(max_length=12, null=False, unique=True)
+    stripe_id = models.CharField(max_length=100, null=True, unique=True)
 
 
 class ShippingContact(models.Model):

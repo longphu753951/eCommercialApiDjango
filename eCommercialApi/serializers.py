@@ -1,3 +1,4 @@
+import stripe
 from django.db.models import Min
 from rest_framework import serializers
 from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail
@@ -80,7 +81,6 @@ class BookmarkDetailSerializer(serializers.ModelSerializer):
 
 
 class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BookmarkDetail
         fields = ["id", "bookmark", "productAttribute"]
@@ -104,7 +104,12 @@ class BookmarkSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     avatar_path = serializers.SerializerMethodField(source='avatar')
     bookmark = serializers.SerializerMethodField('get_bookmark')
+    payment_info = serializers.SerializerMethodField('get_payment_info')
     user = User.objects
+
+    def get_payment_info(self, user):
+        source = stripe.Customer.retrieve(user.stripe_id)
+        return source
 
     def get_bookmark(self, user):
         bookmark = Bookmark.objects
@@ -121,7 +126,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'payment_info', 'avatar',
                   'avatar_path', 'bookmark']
         extra_kwargs = {
             'password': {
@@ -148,7 +153,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'stripe_id', 'avatar',
                   'avatar_path']
         extra_kwargs = {
             'password': {
@@ -163,7 +168,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User(**validated_data)
-        print(validated_data['password'])
+        print(user)
         user.set_password(validated_data['password'])
         user.save()
 

@@ -1,12 +1,17 @@
+import stripe as stripe
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from rest_framework.views import APIView
+
 from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
     UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer
+
+stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
 
 class UserViewSet(viewsets.ViewSet,
@@ -28,11 +33,20 @@ class UserViewSet(viewsets.ViewSet,
 
         return [permissions.AllowAny()]
 
+    def create_payment(self, id):
+        user = User.objects.filter(id=id)
+        first_name = user.values_list('first_name', flat=True).first()
+        last_name = user.values_list('last_name', flat=True).first()
+        email = user.values_list('email', flat=True).first()
+        full_name = first_name + ' ' + last_name
+        created_customer = stripe.Customer.create(name=full_name, email=email)
+        user.update(stripe_id=created_customer.id)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        print(request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        self.create_payment(serializer.data["id"])
         user = User.objects.get(id=serializer.data["id"])
         b = Bookmark(user=user)
         b.save()
@@ -128,6 +142,16 @@ class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
 class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = ProductAttribute.objects.filter(active=True)
     serializer_class = ProductAttributeSerializer
+
+
+@api_view(['GET'])
+def get_all_payment(request):
+    payment_method = stripe.Customer.list_payment_methods(request.user.stripe_id, type="card")
+    return Response(status=status.HTTP_200_OK, data=payment_method)
+
+@api_view(['POST'])
+def post_new_payment(request):
+    
 
 
 def index(request):

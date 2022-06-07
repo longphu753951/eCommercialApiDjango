@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'django_filters',
     'colorfield',
-    'rest_framework'
+    'rest_framework',
 ]
 
 REST_FRAMEWORK = {
