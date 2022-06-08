@@ -104,12 +104,7 @@ class BookmarkSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     avatar_path = serializers.SerializerMethodField(source='avatar')
     bookmark = serializers.SerializerMethodField('get_bookmark')
-    payment_info = serializers.SerializerMethodField('get_payment_info')
     user = User.objects
-
-    def get_payment_info(self, user):
-        source = stripe.Customer.retrieve(user.stripe_id)
-        return source
 
     def get_bookmark(self, user):
         bookmark = Bookmark.objects
@@ -126,7 +121,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'payment_info', 'avatar',
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
                   'avatar_path', 'bookmark']
         extra_kwargs = {
             'password': {

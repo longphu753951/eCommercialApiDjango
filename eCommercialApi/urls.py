@@ -35,4 +35,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('stripe/get_payment_method', views.get_all_payment, name='get_payment_pethod'),
+    path('stripe/get_stripe_costumer', views.get_stripe_costumer, name='get_stripe_costumer'),
 ]

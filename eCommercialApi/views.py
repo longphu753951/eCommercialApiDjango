@@ -145,13 +145,20 @@ class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):
 
 
 @api_view(['GET'])
+def get_stripe_costumer(request):
+    customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
+    return Response(status=status.HTTP_200_OK, data=customer_stripe)
+
+
+@api_view(['GET'])
 def get_all_payment(request):
     payment_method = stripe.Customer.list_payment_methods(request.user.stripe_id, type="card")
     return Response(status=status.HTTP_200_OK, data=payment_method)
 
+
 @api_view(['POST'])
 def post_new_payment(request):
-    
+    pass
 
 
 def index(request):
