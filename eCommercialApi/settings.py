@@ -105,11 +105,11 @@ PASSWORD_HASHERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eCommercialdb',
-        'USER': 'doadmin',
-        'PASSWORD': 'AVNS_5fkEGPrMOAWh_2V',
-        'HOST': 'db-mysql-sgp1-29271-do-user-11360852-0.b.db.ondigitalocean.com',
-        'PORT': '25060',
+        'NAME': 'eCommercialDB',
+        'USER': 'admin',
+        'PASSWORD': 'ToFu!475632891',
+        'HOST': '35.197.156.10',
+        'PORT': '3306',
     },
 }
 

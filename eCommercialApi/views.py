@@ -152,13 +152,48 @@ def get_stripe_costumer(request):
 
 @api_view(['GET'])
 def get_all_payment(request):
-    payment_method = stripe.Customer.list_payment_methods(request.user.stripe_id, type="card")
+    payment_method = stripe.Customer.list_sources(request.user.stripe_id, object="card")
     return Response(status=status.HTTP_200_OK, data=payment_method)
 
 
 @api_view(['POST'])
 def post_new_payment(request):
-    pass
+    card_token = stripe.Token.create(
+        card={
+            "number": request.data["number"],
+            "name": request.data["fullName"],
+            "exp_month": request.data["exp_month"],
+            "exp_year": request.data["exp_year"],
+            "cvc": request.data["cvc"],
+            "currency": "vnd",
+        },
+    )
+    new_card = stripe.Customer.create_source(
+        request.user.stripe_id,
+        source=card_token.id
+    )
+    response = stripe.PaymentMethod.attach(new_card.id, customer=request.user.stripe_id)
+    return Response(response, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+def update_default_payment(request):
+    response = stripe.Customer.modify(
+        request.user.stripe_id,
+        invoice_settings={
+            'default_payment_method': request.data["card_id"]
+        },
+    )
+    return Response(response, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+def detach_payment_method(request):
+    response = stripe.Customer.delete_source(
+        request.user.stripe_id,
+        request.data["card_id"]
+    )
+    return Response(response, status=status.HTTP_200_OK)
 
 
 def index(request):
