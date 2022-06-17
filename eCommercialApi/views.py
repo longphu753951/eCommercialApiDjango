@@ -158,13 +158,15 @@ def get_all_payment(request):
 
 @api_view(['POST'])
 def post_new_payment(request):
+    card = request.data["cardDetail"]
+    print(card["number"])
     card_token = stripe.Token.create(
         card={
-            "number": request.data["number"],
-            "name": request.data["fullName"],
-            "exp_month": request.data["exp_month"],
-            "exp_year": request.data["exp_year"],
-            "cvc": request.data["cvc"],
+            "number": card["number"],
+            "name": card["fullName"],
+            "exp_month": card["exp_month"],
+            "exp_year": card["exp_year"],
+            "cvc": card["cvc"],
             "currency": "vnd",
         },
     )
