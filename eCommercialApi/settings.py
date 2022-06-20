@@ -32,6 +32,7 @@ SECRET_KEY = 'django-insecure-99gc0c4qwe58$@ebvn=zd8&^tx*7u@bo&k@_&lou*a*00)vwgb
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.13', '192.168.1.23', '68.183.236.170', '127.0.0.1']
+APPEND_SLASH = False
 
 # Application definition
 
@@ -46,7 +47,7 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'django_filters',
     'colorfield',
-    'rest_framework'
+    'rest_framework',
 ]
 
 REST_FRAMEWORK = {
@@ -54,8 +55,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10
 }
 
 MIDDLEWARE = [
@@ -93,6 +92,8 @@ OAUTH2_PROVIDER = {
     'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
 }
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -104,11 +105,11 @@ PASSWORD_HASHERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eCommercialdb',
-        'USER': 'doadmin',
-        'PASSWORD': 'AVNS_5fkEGPrMOAWh_2V',
-        'HOST': 'db-mysql-sgp1-29271-do-user-11360852-0.b.db.ondigitalocean.com',
-        'PORT': '25060',
+        'NAME': 'eCommercialDB',
+        'USER': 'admin',
+        'PASSWORD': 'ToFu!475632891',
+        'HOST': '35.197.156.10',
+        'PORT': '3306',
     },
 }
 

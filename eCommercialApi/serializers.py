@@ -1,3 +1,4 @@
+import stripe
 from django.db.models import Min
 from rest_framework import serializers
 from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail
@@ -76,11 +77,24 @@ class BookmarkDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookmarkDetail
-        fields = ["id", "productAttribute"]
+        fields = ["id", "bookmark", "productAttribute"]
+
+
+class BookmarkDetailCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookmarkDetail
+        fields = ["id", "bookmark", "productAttribute"]
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
-    bookmarkDetail = BookmarkDetailSerializer(many=True, read_only=True)
+    bookmarkDetail = serializers.SerializerMethodField(source='get_bookmarkDetail')
+    bookmark = Bookmark.objects
+
+    def get_bookmarkDetail(self, bookmark):
+        bookmarkDetail = BookmarkDetail.objects
+        serializer_context = {'request': self.context.get('request')}
+        source = bookmarkDetail.filter(bookmark=bookmark)
+        return BookmarkDetailSerializer(instance=source, many=True, context=serializer_context).data
 
     class Meta:
         model = Bookmark
@@ -120,14 +134,6 @@ class UserSerializer(serializers.ModelSerializer):
             }
         }
 
-    def create(self, validated_data):
-        user = User(**validated_data)
-        print(validated_data['password'])
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
-
 
 class CreateUserSerializer(serializers.ModelSerializer):
     avatar_path = serializers.SerializerMethodField(source='avatar')
@@ -142,7 +148,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'stripe_id', 'avatar',
                   'avatar_path']
         extra_kwargs = {
             'password': {
@@ -157,7 +163,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User(**validated_data)
-        print(validated_data['password'])
+        print(user)
         user.set_password(validated_data['password'])
         user.save()
 

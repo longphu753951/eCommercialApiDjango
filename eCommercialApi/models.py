@@ -8,6 +8,7 @@ from colorfield.fields import ColorField
 class User(AbstractUser):
     avatar = models.ImageField(upload_to="img/users/%Y/%m")
     telephone = models.CharField(max_length=12, null=False, unique=True)
+    stripe_id = models.CharField(max_length=100, null=True, unique=True)
 
 
 class ShippingContact(models.Model):
@@ -115,3 +116,4 @@ class Review(models.Model):
     detail = models.TextField(null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
