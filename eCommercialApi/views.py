@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 
-from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail
+from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer, \
+    ShippingContactSerializer
 
 stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
@@ -79,12 +80,6 @@ class ProductViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     serializer_class = ProductDetailSerializer
     pagination_class = ProductPaginator
 
-    # def get_permissions(self):
-    # if self.action == 'list':
-    # return [permissions.AllowAny()]
-
-    # return [permissions.IsAuthenticated()]
-
     @action(methods=['get'], detail=True, url_path='productAttributes')
     # product/
     def get_product_attribute(self, query, pk):
@@ -136,6 +131,20 @@ class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
         bookmark = self.queryset.filter(user=user).first()
         context = super().get_serializer_context()
         return Response(data=BookmarkSerializer(bookmark, many=False, context=context).data,
+                        status=status.HTTP_200_OK)
+
+
+class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = ShippingContact.objects
+    serializer_class = ShippingContactSerializer
+
+    @action(methods=['post'], detail=False, url_path="addShippingContact")
+    def add_shipping_contact(self, query):
+        shippingContact = self.request.data['shippingContact']
+        #print(shippingContact)
+        #user = self.request.user
+        #ShippingContact.objects.create(shippingContact)
+        return Response(data=shippingContact,
                         status=status.HTTP_200_OK)
 
 

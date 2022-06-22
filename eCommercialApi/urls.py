@@ -22,6 +22,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(prefix='categories', viewset=views.CategoryViewSet, basename='category')
 router.register(prefix='products', viewset=views.ProductViewSet, basename='product')
+router.register(prefix='shippingContact', viewset=views.ShippingContactViewSet, basename='shippingContact')
 router.register(prefix='productAttribute', viewset=views.ProductAttributeViewSet, basename='productAttribute')
 router.register(prefix='bookmark', viewset=views.BookmarkViewSet, basename='bookmark')
 router.register(prefix='bookmarkDetail', viewset=views.BookmarkDetailViewSet, basename='bookmarkDetail')

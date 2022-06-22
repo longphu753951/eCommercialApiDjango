@@ -1,7 +1,7 @@
 import stripe
 from django.db.models import Min
 from rest_framework import serializers
-from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail
+from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail, ShippingContact
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -133,6 +133,13 @@ class UserSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
+
+
+class ShippingContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShippingContact
+        fields = ['id', 'name', 'district', 'ward', 'province', 'address', 'telephone', 'avatar',
+                  'avatar_path', 'bookmark']
 
 
 class CreateUserSerializer(serializers.ModelSerializer):

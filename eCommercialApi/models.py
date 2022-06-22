@@ -8,14 +8,17 @@ from colorfield.fields import ColorField
 class User(AbstractUser):
     avatar = models.ImageField(upload_to="img/users/%Y/%m")
     telephone = models.CharField(max_length=12, null=False, unique=True)
+    default_address = models.BooleanField(null=False, default=False)
     stripe_id = models.CharField(max_length=100, null=True, unique=True)
 
 
 class ShippingContact(models.Model):
     name = models.CharField(max_length=255, null=False, default='')
+    telephone = models.CharField(max_length=12, null=False, unique=False, default='')
+    district = models.CharField(max_length=255, null=False, default='')
+    ward = models.CharField(max_length=255, null=False, default='')
+    province = models.CharField(max_length=255, null=False, default='')
     address = models.CharField(max_length=255, null=False, default='')
-    address_type = models.CharField(max_length=255, null=False, default='Home')
-    default_address = models.BooleanField(null=False, default=False)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
 
