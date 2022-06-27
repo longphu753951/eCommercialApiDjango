@@ -4,6 +4,7 @@ from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+import json
 from rest_framework.views import APIView
 
 from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact
@@ -113,7 +114,6 @@ class BookmarkDetailViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
     @action(methods=['delete'], detail=False, url_path='deleteBookmark/(?P<my_pk>[^/.]+)')
     # product/
     def delete_bookmark(self, query, my_pk=None):
-        print(my_pk)
         instance = BookmarkDetail.objects.filter(id=my_pk)
         instance.delete()
         user = self.request.user
@@ -140,11 +140,47 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
     @action(methods=['post'], detail=False, url_path="addShippingContact")
     def add_shipping_contact(self, query):
-        shippingContact = self.request.data['shippingContact']
-        #print(shippingContact)
-        #user = self.request.user
-        #ShippingContact.objects.create(shippingContact)
-        return Response(data=shippingContact,
+        shippingContact = self.request.data["shippingContact"]
+        default = self.request.data["default"]
+        savedShippingContact = ShippingContact.objects.create(address=shippingContact["address"],
+                                       district=shippingContact["district"],
+                                       name=shippingContact["name"],
+                                       province=shippingContact["province"],
+                                       telephone=shippingContact["telephone"],
+                                       ward=shippingContact["ward"],
+                                       user=self.request.user
+                                       )
+
+        if default:
+            current_user = self.request.user
+            current_user.default_address=savedShippingContact.id
+            current_user.save()
+
+        return Response(data=savedShippingContact.id,
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['put'], detail=False, url_path="updateShippingContact/(?P<my_pk>[^/.]+)")
+    def update_shipping_contact(self, request, my_pk=None):
+        shippingContact = json.dumps(self.request.data)
+        print(shippingContact)
+        return Response(data='shippingContact',
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['delete'], detail=False, url_path='deleteShippingContact/(?P<my_pk>[^/.]+)')
+    def delete_shipping_contact(self, query, my_pk=None):
+        user = self.request.user
+        instance = ShippingContact.objects.filter(id=my_pk,user=user)
+        instance.delete()
+        shipping_contact = self.queryset.filter(user=user)
+        context = super().get_serializer_context()
+        return Response(data=ShippingContactSerializer(shipping_contact, many=True, context=context).data,
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path="getAllShippingContact")
+    def get_shipping_contact(self, query):
+        shipping_contacts = ShippingContact.objects.filter(user=self.request.user)
+        context = super().get_serializer_context()
+        return Response(data=ShippingContactSerializer(shipping_contacts, many=True, context=context).data,
                         status=status.HTTP_200_OK)
 
 

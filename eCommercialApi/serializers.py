@@ -121,7 +121,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar', "default_address", 
                   'avatar_path', 'bookmark']
         extra_kwargs = {
             'password': {
@@ -138,8 +138,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ShippingContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShippingContact
-        fields = ['id', 'name', 'district', 'ward', 'province', 'address', 'telephone', 'avatar',
-                  'avatar_path', 'bookmark']
+        fields = ['id', 'name', 'district', 'ward', 'province', 'address', 'telephone']
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
