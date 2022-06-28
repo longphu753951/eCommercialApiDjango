@@ -26,6 +26,8 @@ router.register(prefix='shippingContact', viewset=views.ShippingContactViewSet, 
 router.register(prefix='productAttribute', viewset=views.ProductAttributeViewSet, basename='productAttribute')
 router.register(prefix='bookmark', viewset=views.BookmarkViewSet, basename='bookmark')
 router.register(prefix='bookmarkDetail', viewset=views.BookmarkDetailViewSet, basename='bookmarkDetail')
+router.register(prefix='cart', viewset=views.OrderDetailView, basename='cart')
+
 router.register('users', views.UserViewSet)
 
 

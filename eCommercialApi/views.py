@@ -1,17 +1,22 @@
+from django.utils import timezone
 import stripe as stripe
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action, api_view
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 import json
-from rest_framework.views import APIView
 
-from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact
+from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact, OrderDetail, \
+    Order
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer, \
-    ShippingContactSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer, OrderSerializer, BookmarkDetailCreateSerializer, \
+    ShippingContactSerializer, OrderDetailSerializer
 
 stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
@@ -143,17 +148,17 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
         shippingContact = self.request.data["shippingContact"]
         default = self.request.data["default"]
         savedShippingContact = ShippingContact.objects.create(address=shippingContact["address"],
-                                       district=shippingContact["district"],
-                                       name=shippingContact["name"],
-                                       province=shippingContact["province"],
-                                       telephone=shippingContact["telephone"],
-                                       ward=shippingContact["ward"],
-                                       user=self.request.user
-                                       )
+                                                              district=shippingContact["district"],
+                                                              name=shippingContact["name"],
+                                                              province=shippingContact["province"],
+                                                              telephone=shippingContact["telephone"],
+                                                              ward=shippingContact["ward"],
+                                                              user=self.request.user
+                                                              )
 
         if default:
             current_user = self.request.user
-            current_user.default_address=savedShippingContact.id
+            current_user.default_address = savedShippingContact.id
             current_user.save()
 
         return Response(data=savedShippingContact.id,
@@ -169,7 +174,7 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
     @action(methods=['delete'], detail=False, url_path='deleteShippingContact/(?P<my_pk>[^/.]+)')
     def delete_shipping_contact(self, query, my_pk=None):
         user = self.request.user
-        instance = ShippingContact.objects.filter(id=my_pk,user=user)
+        instance = ShippingContact.objects.filter(id=my_pk, user=user)
         instance.delete()
         shipping_contact = self.queryset.filter(user=user)
         context = super().get_serializer_context()
@@ -187,6 +192,58 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
 class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     queryset = ProductAttribute.objects.filter(active=True)
     serializer_class = ProductAttributeSerializer
+
+
+class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = Order.objects
+    serializer_class = OrderSerializer
+    permission_classes = IsAuthenticated,
+
+    @action(methods=['get'], detail=False, url_path="")
+    def get_cart(self):
+        try:
+            context = super().get_serializer_context()
+            order = Order.objects.filter(user=self.request.user, ordered=False).first()
+            return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            raise Http404("You do not have an active order")
+
+    @action(methods=['post'], detail=False, url_path="addToCart")
+    def add_to_cart(self, query):
+        order_detail_qs = OrderDetail.objects.filter(
+            product_attribute_id=self.request.data["productAttribute"],
+            user=self.request.user,
+            ordered=False
+        )
+
+        if order_detail_qs.exists():
+            order_detail = order_detail_qs.first()
+            order_detail.quantity += int(self.request.data["quantity"])
+            order_detail.save()
+
+        else:
+            order_detail = OrderDetail.objects.create(
+                product_attribute_id=self.request.data["productAttribute"],
+                user=self.request.user,
+                ordered=False,
+                quantity=int(self.request.data["quantity"])
+            )
+            order_detail.save()
+
+        order_qs = Order.objects.filter(user=self.request.user, ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if not order.order_details.filter(id=order_detail.id).exists():
+                order.order_details.add(order_detail)
+
+        else:
+            ordered_date = timezone.now()
+            order = Order.objects.create(
+                user=self.request.user, ordered_date=ordered_date)
+            order.order_details.add(order_detail)
+
+        context = super().get_serializer_context()
+        return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

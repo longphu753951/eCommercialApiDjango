@@ -4,6 +4,8 @@ from django.utils.html import mark_safe
 from uuid import uuid4
 from colorfield.fields import ColorField
 
+from eCommercialApi import settings
+
 
 class User(AbstractUser):
     avatar = models.ImageField(upload_to="img/users/%Y/%m")
@@ -97,26 +99,55 @@ class ShippingType(models.Model):
         return self.shipping_unit.name + " (" + self.type + ")"
 
 
-class Order(models.Model):
-    shipping_type = models.ForeignKey(ShippingType, on_delete=models.SET_NULL, null=True)
-    shipped_date = models.DateTimeField(auto_now_add=True, blank=True)
-    delivery_price = models.DecimalField(max_digits=5, decimal_places=2)
-    shipped_price = models.DecimalField(max_digits=5, decimal_places=2)
-    discount = models.FloatField(null=False, default=0)
-    total_price = models.DecimalField(max_digits=5, decimal_places=2)
-    status = models.IntegerField(max_length=1, null=False, default=1)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-
-
-class OrderDetail(models.Model):
-    product_attribute = models.ForeignKey(ProductAttribute, on_delete=models.SET_NULL, null=True)
-    quantity = models.IntegerField(null=False, default=1)
-    unit_price = models.DecimalField(max_digits=5, decimal_places=2)
-
-
 class Review(models.Model):
     rating = models.FloatField(null=False, default=0.0)
     detail = models.TextField(null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
+
+class Payment(models.Model):
+    stripe_charge_id = models.CharField(max_length=50)
+    user = models.ForeignKey(User, null=True, related_name='payment', on_delete=models.SET_NULL)
+    amount = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username
+
+
+class OrderDetail(models.Model):
+    user = models.ForeignKey(User, null=True, related_name='orderDetail', on_delete=models.SET_NULL)
+    product_attribute = models.ForeignKey(ProductAttribute, on_delete=models.SET_NULL, null=True)
+    ordered = models.BooleanField(default=False)
+    quantity = models.IntegerField(null=False, default=1)
+
+    def __str__(self):
+        return f"{self.product_attribute.__str__()}"
+
+    def get_total_item_price(self):
+        return self.quantity * self.product_attribute.price
+
+
+class Order(models.Model):
+    user = models.ForeignKey(User, null=True, related_name='order', on_delete=models.SET_NULL)
+    order_details = models.ManyToManyField(OrderDetail)
+    start_date = models.DateTimeField(auto_now_add=True)
+    ordered_date = models.DateTimeField(null=True)
+    ordered = models.BooleanField(default=False)
+    being_delivered = models.BooleanField(default=False)
+    received = models.BooleanField(default=False)
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
+    shipping_contact = models.ForeignKey(ShippingContact, null=True, related_name='shippingContact',
+                                         on_delete=models.SET_NULL)
+    shipping_type = models.ForeignKey(ShippingType, null=True, related_name='shippingType',
+                                      on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.user.username
+
+    def get_total(self):
+        total = 0
+        for order_detail in self.order_details.all():
+            total += order_detail.get_total_item_price()
+        return total

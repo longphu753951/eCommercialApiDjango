@@ -1,7 +1,8 @@
 import stripe
 from django.db.models import Min
 from rest_framework import serializers
-from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail, ShippingContact
+from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail, ShippingContact, \
+    OrderDetail, Order, Payment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -121,7 +122,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar', "default_address", 
+        fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
+                  "default_address",
                   'avatar_path', 'bookmark']
         extra_kwargs = {
             'password': {
@@ -174,3 +176,56 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    product_attribute = serializers.SerializerMethodField('get_productAttribute')
+    final_price = serializers.SerializerMethodField('get_total_item_price')
+
+    class Meta:
+        model = OrderDetail
+        fields = (
+            'id',
+            'ordered',
+            'product_attribute',
+            'quantity',
+            'final_price'
+        )
+
+    def get_productAttribute(self, obj):
+        serializer_context = {'request': self.context.get('request')}
+        print(serializer_context)
+        return ProductAttributeSerializer(obj.product_attribute, context=serializer_context).data
+
+    def get_total_item_price(self, obj):
+        return obj.get_total_item_price()
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_details = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = (
+            'id',
+            'order_details',
+            'total'
+        )
+
+    def get_order_details(self, obj):
+        serializer_context = {'request': self.context.get('request')}
+        return OrderDetailSerializer(obj.order_details.all(), many=True, context=serializer_context).data
+
+    def get_total(self, obj):
+        return obj.get_total()
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = (
+            'id',
+            'amount',
+            'timestamp'
+        )
