@@ -1,7 +1,7 @@
 from django.utils import timezone
 import stripe as stripe
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action, api_view
@@ -208,6 +208,19 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
         except ObjectDoesNotExist:
             raise Http404("You do not have an active order")
 
+    @action(methods=['delete'], detail=False, url_path="deleteToCart/(?P<my_pk>[^/.]+)")
+    def delete_to_cart(self, query, my_pk=None):
+        order_detail_qs = OrderDetail.objects.filter(
+            id=my_pk,
+            user=self.request.user,
+            ordered=False
+        )
+        if order_detail_qs.exists():
+            order_detail = order_detail_qs.first()
+            order_detail.delete()
+            order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
+            return Response(data=order_total, status=status.HTTP_200_OK)
+
     @action(methods=['post'], detail=False, url_path="addToCart")
     def add_to_cart(self, query):
         order_detail_qs = OrderDetail.objects.filter(
@@ -244,6 +257,16 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
         context = super().get_serializer_context()
         return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
+
+    @action(methods=['put'], detail=False, url_path="updateQuantity/(?P<my_pk>[^/.]+)")
+    def update_quantity(self, query, my_pk=None):
+        order_detail = OrderDetail.objects.filter(id=my_pk).first()
+        order_detail.quantity = int(self.request.data["quantity"])
+        order_detail.save()
+        context = super().get_serializer_context()
+        order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
+        total_price_item = order_detail.get_total_item_price()
+        return JsonResponse({"total_price_item": total_price_item, "order_total": order_total})
 
 
 @api_view(['GET'])
@@ -284,9 +307,8 @@ def post_new_payment(request):
 def update_default_payment(request):
     response = stripe.Customer.modify(
         request.user.stripe_id,
-        invoice_settings={
-            'default_payment_method': request.data["card_id"]
-        },
+        default_source=request.data["card_id"]
+
     )
     return Response(response, status=status.HTTP_200_OK)
 
