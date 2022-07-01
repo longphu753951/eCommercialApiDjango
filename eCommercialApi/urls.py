@@ -27,6 +27,8 @@ router.register(prefix='productAttribute', viewset=views.ProductAttributeViewSet
 router.register(prefix='bookmark', viewset=views.BookmarkViewSet, basename='bookmark')
 router.register(prefix='bookmarkDetail', viewset=views.BookmarkDetailViewSet, basename='bookmarkDetail')
 router.register(prefix='cart', viewset=views.OrderDetailView, basename='cart')
+router.register(prefix='shippingUnit', viewset=views.ShippingUnitView, basename='shippingUnit')
+router.register(prefix='shippingType', viewset=views.ShippingTypeView, basename='shippingType')
 
 router.register('users', views.UserViewSet)
 
@@ -40,5 +42,6 @@ urlpatterns = [
     path('stripe/get_payment_method', views.get_all_payment, name='get_payment_pethod'),
     path('stripe/get_stripe_costumer', views.get_stripe_costumer, name='get_stripe_costumer'),
     path('stripe/update_default_payment', views.update_default_payment, name='update_default_payment'),
-    path('stripe/post_new_payment', views.post_new_payment, name='post_new_payment')
+    path('stripe/post_new_payment', views.post_new_payment, name='post_new_payment'),
+    path('stripe/create_payment_intent', views.create_payment_intent, name='create_payment_intent')
 ]

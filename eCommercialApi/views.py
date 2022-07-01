@@ -12,11 +12,11 @@ from rest_framework.parsers import MultiPartParser
 import json
 
 from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact, OrderDetail, \
-    Order
+    Order, ShippingUnit, ShippingType
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
     UserSerializer, BookmarkSerializer, CreateUserSerializer, OrderSerializer, BookmarkDetailCreateSerializer, \
-    ShippingContactSerializer, OrderDetailSerializer
+    ShippingContactSerializer, OrderDetailSerializer, ShippingUnitSerializer, ShippingTypeSerializer
 
 stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
@@ -210,6 +210,7 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
     @action(methods=['delete'], detail=False, url_path="deleteToCart/(?P<my_pk>[^/.]+)")
     def delete_to_cart(self, query, my_pk=None):
+        print(my_pk)
         order_detail_qs = OrderDetail.objects.filter(
             id=my_pk,
             user=self.request.user,
@@ -260,6 +261,7 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
     @action(methods=['put'], detail=False, url_path="updateQuantity/(?P<my_pk>[^/.]+)")
     def update_quantity(self, query, my_pk=None):
+        print(my_pk)
         order_detail = OrderDetail.objects.filter(id=my_pk).first()
         order_detail.quantity = int(self.request.data["quantity"])
         order_detail.save()
@@ -267,6 +269,37 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
         order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
         total_price_item = order_detail.get_total_item_price()
         return JsonResponse({"total_price_item": total_price_item, "order_total": order_total})
+
+
+class ShippingUnitView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = ShippingUnit.objects
+    serializer_class = ShippingUnitSerializer
+
+    @action(methods=['get'], detail=False, url_path="")
+    def get_shipping_unit(self):
+        try:
+            context = super().get_serializer_context()
+            shipping_units = self.queryset.all()
+            return Response(self.serializer_class(shipping_units, many=True, context=context).data,
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            raise Http404("Don't have any shipping unit")
+
+
+class ShippingTypeView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = ShippingType.objects
+    serializer_class = ShippingTypeSerializer
+
+    @action(methods=['get'], detail=False, url_path="")
+    def get_shipping_type(self):
+        try:
+            context = super().get_serializer_context()
+            shipping_types = self.queryset.filter(
+                shippingType__shipping_contact_id__in=self.request.data["shipping_unit_id"])
+            return Response(self.serializer_class(shipping_types, many=True, context=context).data,
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            raise Http404("Don't have any shipping unit")
 
 
 @api_view(['GET'])
@@ -279,6 +312,21 @@ def get_stripe_costumer(request):
 def get_all_payment(request):
     payment_method = stripe.Customer.list_sources(request.user.stripe_id, object="card")
     return Response(status=status.HTTP_200_OK, data=payment_method)
+
+
+@api_view(['POST'])
+def create_payment_intent(request):
+    customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
+    response = stripe.PaymentIntent.create(
+        amount=2000,
+        payment_method = customer_stripe.default_source,
+        currency="usd",
+        customer = customer_stripe,
+        payment_method_types=["card"],
+        confirmation_method= "manual"
+    )
+
+    return Response(response, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

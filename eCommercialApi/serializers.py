@@ -2,7 +2,7 @@ import stripe
 from django.db.models import Min
 from rest_framework import serializers
 from .models import Category, Product, ProductAttribute, ProductImage, User, Bookmark, BookmarkDetail, ShippingContact, \
-    OrderDetail, Order, Payment
+    OrderDetail, Order, Payment, ShippingUnit, ShippingType
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -194,7 +194,6 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
     def get_productAttribute(self, obj):
         serializer_context = {'request': self.context.get('request')}
-        print(serializer_context)
         return ProductAttributeSerializer(obj.product_attribute, context=serializer_context).data
 
     def get_total_item_price(self, obj):
@@ -219,6 +218,45 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_total(self, obj):
         return obj.get_total()
+
+
+class ShippingTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShippingType
+        fields = (
+            'id',
+            'type',
+            'min_date',
+            'max_date',
+            'price_per_Km'
+        )
+
+class ShippingUnitSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField(source='image')
+    shipping_types = serializers.SerializerMethodField()
+
+    def get_shipping_types(self, obj):
+        serializer_context = {'request': self.context.get('request')}
+        return ShippingTypeSerializer(ShippingType.objects.filter(shipping_unit=obj), many=True, context=serializer_context).data
+
+    def get_image(self, obj):
+        request = self.context['request']
+        if obj.image and not obj.image.name.startswith('/static'):
+            path = '/static/%s' % obj.image.name
+
+            return request.build_absolute_uri(path)
+
+    class Meta:
+        model = ShippingUnit
+        fields = (
+            'id',
+            'name',
+            'image',
+            'shipping_types',
+            'telephone'
+        )
+
 
 
 class PaymentSerializer(serializers.ModelSerializer):
