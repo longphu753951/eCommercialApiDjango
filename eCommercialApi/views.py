@@ -12,7 +12,7 @@ from rest_framework.parsers import MultiPartParser
 import json
 
 from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact, OrderDetail, \
-    Order, ShippingUnit, ShippingType
+    Order, ShippingUnit, ShippingType, Payment
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
     UserSerializer, BookmarkSerializer, CreateUserSerializer, OrderSerializer, BookmarkDetailCreateSerializer, \
@@ -199,18 +199,20 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     permission_classes = IsAuthenticated,
 
-    @action(methods=['get'], detail=False, url_path="")
-    def get_cart(self):
+    @action(methods=['get'], detail=False, url_path="getCart")
+    def get_cart(self, query):
         try:
             context = super().get_serializer_context()
             order = Order.objects.filter(user=self.request.user, ordered=False).first()
+            print(order)
             return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
-            raise Http404("You do not have an active order")
+            order = Order()
+            order.save()
+            return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
 
     @action(methods=['delete'], detail=False, url_path="deleteToCart/(?P<my_pk>[^/.]+)")
     def delete_to_cart(self, query, my_pk=None):
-        print(my_pk)
         order_detail_qs = OrderDetail.objects.filter(
             id=my_pk,
             user=self.request.user,
@@ -221,6 +223,41 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
             order_detail.delete()
             order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
             return Response(data=order_total, status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=False, url_path="setPayment")
+    def set_payment(self, query):
+        user = self.request.user
+        order = Order.objects.get(user=self.request.user, ordered=False)
+        context = super().get_serializer_context()
+        shipping_contact = ShippingContact.objects.get(user=user, id=self.request.user.default_address)
+        customer_stripe = stripe.Customer.retrieve(self.request.user.stripe_id)
+        stripePaymentIntent = stripe.PaymentIntent.create(
+            amount=int(order.get_total()),
+            payment_method=customer_stripe.default_source,
+            currency="usd",
+            customer=customer_stripe,
+            confirm=True,
+            payment_method_types=["card"],
+        )
+
+        payment = Payment()
+        payment.stripe_charge_id = stripePaymentIntent['id']
+        payment.user = self.request.user
+        payment.amount = order.get_total()
+        payment.save()
+
+        order_details = order.order_details.all()
+        order_details.update(ordered=True)
+        for order_detail in order_details:
+            order_detail.save()
+
+        order.ordered = True
+        order.payment = payment
+        order.shipping_contact = shipping_contact
+        order.save()
+
+        return Response("success",
+                        status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False, url_path="addToCart")
     def add_to_cart(self, query):
@@ -319,11 +356,11 @@ def create_payment_intent(request):
     customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
     response = stripe.PaymentIntent.create(
         amount=2000,
-        payment_method = customer_stripe.default_source,
+        payment_method=customer_stripe.default_source,
         currency="usd",
-        customer = customer_stripe,
+        customer=customer_stripe,
         payment_method_types=["card"],
-        confirmation_method= "manual"
+        confirmation_method="manual"
     )
 
     return Response(response, status=status.HTTP_200_OK)

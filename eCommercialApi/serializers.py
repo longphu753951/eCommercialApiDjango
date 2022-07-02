@@ -209,7 +209,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'order_details',
-            'total'
+            'total',
         )
 
     def get_order_details(self, obj):
@@ -221,7 +221,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class ShippingTypeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ShippingType
         fields = (
@@ -232,13 +231,15 @@ class ShippingTypeSerializer(serializers.ModelSerializer):
             'price_per_Km'
         )
 
+
 class ShippingUnitSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField(source='image')
     shipping_types = serializers.SerializerMethodField()
 
     def get_shipping_types(self, obj):
         serializer_context = {'request': self.context.get('request')}
-        return ShippingTypeSerializer(ShippingType.objects.filter(shipping_unit=obj), many=True, context=serializer_context).data
+        return ShippingTypeSerializer(ShippingType.objects.filter(shipping_unit=obj), many=True,
+                                      context=serializer_context).data
 
     def get_image(self, obj):
         request = self.context['request']
@@ -256,7 +257,6 @@ class ShippingUnitSerializer(serializers.ModelSerializer):
             'shipping_types',
             'telephone'
         )
-
 
 
 class PaymentSerializer(serializers.ModelSerializer):
