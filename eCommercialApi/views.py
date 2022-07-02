@@ -1,17 +1,22 @@
+from django.utils import timezone
 import stripe as stripe
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action, api_view
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 import json
-from rest_framework.views import APIView
 
-from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact
+from .models import Category, Product, ProductAttribute, User, Bookmark, BookmarkDetail, ShippingContact, OrderDetail, \
+    Order, ShippingUnit, ShippingType, Payment
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
-    UserSerializer, BookmarkSerializer, CreateUserSerializer, BookmarkDetailSerializer, BookmarkDetailCreateSerializer, \
-    ShippingContactSerializer
+    UserSerializer, BookmarkSerializer, CreateUserSerializer, OrderSerializer, BookmarkDetailCreateSerializer, \
+    ShippingContactSerializer, OrderDetailSerializer, ShippingUnitSerializer, ShippingTypeSerializer
 
 stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
@@ -143,17 +148,17 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
         shippingContact = self.request.data["shippingContact"]
         default = self.request.data["default"]
         savedShippingContact = ShippingContact.objects.create(address=shippingContact["address"],
-                                       district=shippingContact["district"],
-                                       name=shippingContact["name"],
-                                       province=shippingContact["province"],
-                                       telephone=shippingContact["telephone"],
-                                       ward=shippingContact["ward"],
-                                       user=self.request.user
-                                       )
+                                                              district=shippingContact["district"],
+                                                              name=shippingContact["name"],
+                                                              province=shippingContact["province"],
+                                                              telephone=shippingContact["telephone"],
+                                                              ward=shippingContact["ward"],
+                                                              user=self.request.user
+                                                              )
 
         if default:
             current_user = self.request.user
-            current_user.default_address=savedShippingContact.id
+            current_user.default_address = savedShippingContact.id
             current_user.save()
 
         return Response(data=savedShippingContact.id,
@@ -169,7 +174,7 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
     @action(methods=['delete'], detail=False, url_path='deleteShippingContact/(?P<my_pk>[^/.]+)')
     def delete_shipping_contact(self, query, my_pk=None):
         user = self.request.user
-        instance = ShippingContact.objects.filter(id=my_pk,user=user)
+        instance = ShippingContact.objects.filter(id=my_pk, user=user)
         instance.delete()
         shipping_contact = self.queryset.filter(user=user)
         context = super().get_serializer_context()
@@ -189,6 +194,151 @@ class ProductAttributeViewSet(viewsets.ModelViewSet, generics.ListAPIView):
     serializer_class = ProductAttributeSerializer
 
 
+class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = Order.objects
+    serializer_class = OrderSerializer
+    permission_classes = IsAuthenticated,
+
+    @action(methods=['get'], detail=False, url_path="getCart")
+    def get_cart(self, query):
+        try:
+            context = super().get_serializer_context()
+            order = Order.objects.filter(user=self.request.user, ordered=False).first()
+            print(order)
+            return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            order = Order()
+            order.save()
+            return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
+
+    @action(methods=['delete'], detail=False, url_path="deleteToCart/(?P<my_pk>[^/.]+)")
+    def delete_to_cart(self, query, my_pk=None):
+        order_detail_qs = OrderDetail.objects.filter(
+            id=my_pk,
+            user=self.request.user,
+            ordered=False
+        )
+        if order_detail_qs.exists():
+            order_detail = order_detail_qs.first()
+            order_detail.delete()
+            order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
+            return Response(data=order_total, status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=False, url_path="setPayment")
+    def set_payment(self, query):
+        user = self.request.user
+        order = Order.objects.get(user=self.request.user, ordered=False)
+        context = super().get_serializer_context()
+        shipping_contact = ShippingContact.objects.get(user=user, id=self.request.user.default_address)
+        customer_stripe = stripe.Customer.retrieve(self.request.user.stripe_id)
+        stripePaymentIntent = stripe.PaymentIntent.create(
+            amount=int(order.get_total()),
+            payment_method=customer_stripe.default_source,
+            currency="usd",
+            customer=customer_stripe,
+            confirm=True,
+            payment_method_types=["card"],
+        )
+
+        payment = Payment()
+        payment.stripe_charge_id = stripePaymentIntent['id']
+        payment.user = self.request.user
+        payment.amount = order.get_total()
+        payment.save()
+
+        order_details = order.order_details.all()
+        order_details.update(ordered=True)
+        for order_detail in order_details:
+            order_detail.save()
+
+        order.ordered = True
+        order.payment = payment
+        order.shipping_contact = shipping_contact
+        order.save()
+
+        return Response("success",
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=False, url_path="addToCart")
+    def add_to_cart(self, query):
+        order_detail_qs = OrderDetail.objects.filter(
+            product_attribute_id=self.request.data["productAttribute"],
+            user=self.request.user,
+            ordered=False
+        )
+
+        if order_detail_qs.exists():
+            order_detail = order_detail_qs.first()
+            order_detail.quantity += int(self.request.data["quantity"])
+            order_detail.save()
+
+        else:
+            order_detail = OrderDetail.objects.create(
+                product_attribute_id=self.request.data["productAttribute"],
+                user=self.request.user,
+                ordered=False,
+                quantity=int(self.request.data["quantity"])
+            )
+            order_detail.save()
+
+        order_qs = Order.objects.filter(user=self.request.user, ordered=False)
+        if order_qs.exists():
+            order = order_qs[0]
+            if not order.order_details.filter(id=order_detail.id).exists():
+                order.order_details.add(order_detail)
+
+        else:
+            ordered_date = timezone.now()
+            order = Order.objects.create(
+                user=self.request.user, ordered_date=ordered_date)
+            order.order_details.add(order_detail)
+
+        context = super().get_serializer_context()
+        return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
+
+    @action(methods=['put'], detail=False, url_path="updateQuantity/(?P<my_pk>[^/.]+)")
+    def update_quantity(self, query, my_pk=None):
+        print(my_pk)
+        order_detail = OrderDetail.objects.filter(id=my_pk).first()
+        order_detail.quantity = int(self.request.data["quantity"])
+        order_detail.save()
+        context = super().get_serializer_context()
+        order_total = Order.objects.filter(user=self.request.user, ordered=False).first().get_total()
+        total_price_item = order_detail.get_total_item_price()
+        return JsonResponse({"total_price_item": total_price_item, "order_total": order_total})
+
+
+class ShippingUnitView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = ShippingUnit.objects
+    serializer_class = ShippingUnitSerializer
+
+    @action(methods=['get'], detail=False, url_path="")
+    def get_shipping_unit(self):
+        try:
+            context = super().get_serializer_context()
+            shipping_units = self.queryset.all()
+            return Response(self.serializer_class(shipping_units, many=True, context=context).data,
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            raise Http404("Don't have any shipping unit")
+
+
+class ShippingTypeView(viewsets.ModelViewSet, generics.RetrieveAPIView):
+    queryset = ShippingType.objects
+    serializer_class = ShippingTypeSerializer
+
+    @action(methods=['get'], detail=False, url_path="")
+    def get_shipping_type(self):
+        try:
+            context = super().get_serializer_context()
+            shipping_types = self.queryset.filter(
+                shippingType__shipping_contact_id__in=self.request.data["shipping_unit_id"])
+            return Response(self.serializer_class(shipping_types, many=True, context=context).data,
+                            status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            raise Http404("Don't have any shipping unit")
+
+
 @api_view(['GET'])
 def get_stripe_costumer(request):
     customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
@@ -199,6 +349,21 @@ def get_stripe_costumer(request):
 def get_all_payment(request):
     payment_method = stripe.Customer.list_sources(request.user.stripe_id, object="card")
     return Response(status=status.HTTP_200_OK, data=payment_method)
+
+
+@api_view(['POST'])
+def create_payment_intent(request):
+    customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
+    response = stripe.PaymentIntent.create(
+        amount=2000,
+        payment_method=customer_stripe.default_source,
+        currency="usd",
+        customer=customer_stripe,
+        payment_method_types=["card"],
+        confirmation_method="manual"
+    )
+
+    return Response(response, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -227,9 +392,8 @@ def post_new_payment(request):
 def update_default_payment(request):
     response = stripe.Customer.modify(
         request.user.stripe_id,
-        invoice_settings={
-            'default_payment_method': request.data["card_id"]
-        },
+        default_source=request.data["card_id"]
+
     )
     return Response(response, status=status.HTTP_200_OK)
 

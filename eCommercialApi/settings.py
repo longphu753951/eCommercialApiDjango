@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-99gc0c4qwe58$@ebvn=zd8&^tx*7u@bo&k@_&lou*a*00)vwgb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.13', '192.168.1.23', '68.183.236.170', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.1.13', '192.168.1.23', '68.183.236.170', '127.0.0.1', 'localhost']
 APPEND_SLASH = False
 
 # Application definition
@@ -88,7 +88,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 
 OAUTH2_PROVIDER = {
-    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
     'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
 }
 
