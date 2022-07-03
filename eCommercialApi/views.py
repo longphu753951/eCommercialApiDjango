@@ -201,10 +201,10 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
     @action(methods=['get'], detail=False, url_path="getCart")
     def get_cart(self, query):
+        print('abc')
         try:
             context = super().get_serializer_context()
             order = Order.objects.filter(user=self.request.user, ordered=False).first()
-            print(order)
             return Response(OrderSerializer(order, many=False, context=context).data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             order = Order()
@@ -270,6 +270,10 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
         if order_detail_qs.exists():
             order_detail = order_detail_qs.first()
             order_detail.quantity += int(self.request.data["quantity"])
+            print(order_detail.quantity)
+            if order_detail.quantity > 12:
+                return Response(data="the quantity must not over than 12", status=status.HTTP_404_NOT_FOUND)
+
             order_detail.save()
 
         else:
@@ -298,7 +302,6 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
 
     @action(methods=['put'], detail=False, url_path="updateQuantity/(?P<my_pk>[^/.]+)")
     def update_quantity(self, query, my_pk=None):
-        print(my_pk)
         order_detail = OrderDetail.objects.filter(id=my_pk).first()
         order_detail.quantity = int(self.request.data["quantity"])
         order_detail.save()
