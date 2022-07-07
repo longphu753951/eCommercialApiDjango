@@ -88,6 +88,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'eCommercialApi.wsgi.application'
 
 OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
     'OAUTH2_VALIDATOR_CLASS': 'eCommercialApi.validate.MyOAuth2Validator'
 }
 
