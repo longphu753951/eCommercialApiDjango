@@ -136,6 +136,7 @@ class Order(models.Model):
     ordered_date = models.DateTimeField(null=True)
     ordered = models.BooleanField(default=False)
     being_delivered = models.BooleanField(default=False)
+    delivering = models.BooleanField(default=False)
     received = models.BooleanField(default=False)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
     shipping_contact = models.ForeignKey(ShippingContact, null=True, related_name='shippingContact',

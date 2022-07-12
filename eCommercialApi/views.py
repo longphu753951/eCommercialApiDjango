@@ -16,7 +16,8 @@ from .models import Category, Product, ProductAttribute, User, Bookmark, Bookmar
 from .paginators import ProductPaginator
 from .serializers import CategorySerializer, ProductSerializer, ProductAttributeSerializer, ProductDetailSerializer, \
     UserSerializer, BookmarkSerializer, CreateUserSerializer, OrderSerializer, BookmarkDetailCreateSerializer, \
-    ShippingContactSerializer, OrderDetailSerializer, ShippingUnitSerializer, ShippingTypeSerializer
+    ShippingContactSerializer, OrderDetailSerializer, ShippingUnitSerializer, ShippingTypeSerializer, \
+    OrderSummarySerializer
 
 stripe.api_key = 'sk_test_51KAS9GEAPiKpbC1NsDSO98Tt5dPSoe27YloBRwOD8ayF0xCHSjmG8mHeUNSHG5yqUhf735aM2GyRDdvH3KX8SqAs00WUm2YbBa'
 
@@ -164,6 +165,14 @@ class ShippingContactViewSet(viewsets.ModelViewSet, generics.RetrieveAPIView):
         return Response(data=savedShippingContact.id,
                         status=status.HTTP_200_OK)
 
+    @action(methods=['put'], detail=False, url_path="updateDefaultAddress/(?P<my_pk>[^/.]+)")
+    def update_default_address(self, request, my_pk=None):
+        user = self.request.user
+        user.default_address = my_pk
+        user.save()
+        return Response(data=my_pk,
+                        status=status.HTTP_200_OK)
+
     @action(methods=['put'], detail=False, url_path="updateShippingContact/(?P<my_pk>[^/.]+)")
     def update_shipping_contact(self, request, my_pk=None):
         shippingContact = json.dumps(self.request.data)
@@ -199,9 +208,17 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     permission_classes = IsAuthenticated,
 
+    @action(methods=['put'], detail=False, url_path="getOrder")
+    def get_order(self, query):
+        ordered = self.request.data["ordered"]
+        delivering = self.request.data["delivering"]
+        received = self.request.data["received"]
+        context = super().get_serializer_context()
+        order = Order.objects.filter(user=self.request.user, ordered=ordered, delivering= delivering, received=received)
+        return Response(OrderSummarySerializer(order, many=True, context=context).data, status=status.HTTP_200_OK)
+
     @action(methods=['get'], detail=False, url_path="getCart")
     def get_cart(self, query):
-        print('abc')
         try:
             context = super().get_serializer_context()
             order = Order.objects.filter(user=self.request.user, ordered=False).first()
@@ -231,17 +248,9 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
         context = super().get_serializer_context()
         shipping_contact = ShippingContact.objects.get(user=user, id=self.request.user.default_address)
         customer_stripe = stripe.Customer.retrieve(self.request.user.stripe_id)
-        stripePaymentIntent = stripe.PaymentIntent.create(
-            amount=int(order.get_total()),
-            payment_method=customer_stripe.default_source,
-            currency="usd",
-            customer=customer_stripe,
-            confirm=True,
-            payment_method_types=["card"],
-        )
 
         payment = Payment()
-        payment.stripe_charge_id = stripePaymentIntent['id']
+        payment.stripe_charge_id = self.request.data["paymentIntentId"]
         payment.user = self.request.user
         payment.amount = order.get_total()
         payment.save()
@@ -252,7 +261,10 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
             order_detail.save()
 
         order.ordered = True
+        order.ordered_date = payment.timestamp
         order.payment = payment
+        shippingType = ShippingType.objects.get(id=self.request.data["shippingType"])
+        order.shipping_type = shippingType
         order.shipping_contact = shipping_contact
         order.save()
 
@@ -330,12 +342,12 @@ class ShippingTypeView(viewsets.ModelViewSet, generics.RetrieveAPIView):
     queryset = ShippingType.objects
     serializer_class = ShippingTypeSerializer
 
-    @action(methods=['get'], detail=False, url_path="")
-    def get_shipping_type(self):
+    @action(methods=['get'], detail=False, url_path="getShippingType/(?P<my_pk>[^/.]+)")
+    def get_shipping_type(self, query, my_pk=None):
         try:
             context = super().get_serializer_context()
             shipping_types = self.queryset.filter(
-                shippingType__shipping_contact_id__in=self.request.data["shipping_unit_id"])
+                shipping_unit_id=my_pk)
             return Response(self.serializer_class(shipping_types, many=True, context=context).data,
                             status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
@@ -357,16 +369,22 @@ def get_all_payment(request):
 @api_view(['POST'])
 def create_payment_intent(request):
     customer_stripe = stripe.Customer.retrieve(request.user.stripe_id)
-    response = stripe.PaymentIntent.create(
-        amount=2000,
-        payment_method=customer_stripe.default_source,
+    totalPrice = int(Order.objects.get(user=request.user, ordered=False).get_total()) * 100
+    ephemeralKey = stripe.EphemeralKey.create(
+        customer=customer_stripe,
+        stripe_version='2020-08-27',
+    )
+    paymentIntent = stripe.PaymentIntent.create(
+        amount=totalPrice,
         currency="usd",
         customer=customer_stripe,
         payment_method_types=["card"],
-        confirmation_method="manual"
     )
 
-    return Response(response, status=status.HTTP_200_OK)
+    return JsonResponse({"paymentIntent": paymentIntent,
+                         "ephemeralKey": ephemeralKey.secret,
+                         "customer": request.user.stripe_id,
+                         "publishableKey": 'pk_test_51KAS9GEAPiKpbC1N48OEYp3ofa5Ll0aDuPI6Y8waDoh1x6otOE4bljUQa5aJY3i5lt2dH46owJRV3w9R9sbh1O7c00oZ7xp778'})
 
 
 @api_view(['POST'])

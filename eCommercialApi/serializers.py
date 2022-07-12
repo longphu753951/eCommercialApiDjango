@@ -220,7 +220,32 @@ class OrderSerializer(serializers.ModelSerializer):
         return obj.get_total()
 
 
+class OrderSummarySerializer(serializers.ModelSerializer):
+    payment = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = (
+            'id',
+            'ordered_date',
+            'payment'
+        )
+
+    def get_payment(self, obj):
+        serializer_context = {'request': self.context.get('request')}
+        return PaymentSerializer(obj.payment, context=serializer_context).data
+
+
 class ShippingTypeSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        request = self.context['request']
+        if obj.shipping_unit.image and not obj.shipping_unit.image.name.startswith('/static'):
+            path = '/static/%s' % obj.shipping_unit.image.name
+
+            return request.build_absolute_uri(path)
+
     class Meta:
         model = ShippingType
         fields = (
@@ -228,7 +253,8 @@ class ShippingTypeSerializer(serializers.ModelSerializer):
             'type',
             'min_date',
             'max_date',
-            'price_per_Km'
+            'price_per_Km',
+            'image'
         )
 
 
