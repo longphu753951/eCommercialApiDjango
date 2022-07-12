@@ -208,7 +208,7 @@ class OrderDetailView(viewsets.ModelViewSet, generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     permission_classes = IsAuthenticated,
 
-    @action(methods=['post'], detail=False, url_path="getOrder")
+    @action(methods=['put'], detail=False, url_path="getOrder")
     def get_order(self, query):
         ordered = self.request.data["ordered"]
         delivering = self.request.data["delivering"]
