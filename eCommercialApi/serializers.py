@@ -120,6 +120,9 @@ class UserSerializer(serializers.ModelSerializer):
 
             return request.build_absolute_uri(path)
 
+        else:
+            return request.build_absolute_uri('/static/img/users/image.png')
+
     class Meta:
         model = User
         fields = ['id', 'first_name', 'password', 'last_name', 'username', 'email', 'telephone', 'avatar',
